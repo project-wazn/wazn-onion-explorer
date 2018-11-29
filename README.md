@@ -124,7 +124,7 @@ cd ~
 git clone https://github.com/Project-WAZN/WAZN.Explorer_onion.git
 
 # enter the downloaded sourced code folder
-cd wazn.exporer_onion
+cd wazn.explorer_onion
 
 # make a build folder and enter it
 mkdir build && cd build
