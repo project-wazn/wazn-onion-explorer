@@ -72,7 +72,7 @@ get_tx_pub_key_from_str_hash(Blockchain& core_storage, const string& hash_str, t
 }
 
 /**
-* Parse monero address in a string form into
+* Parse WAZN or Monero address in a string form into
 * cryptonote::account_public_address object
 */
 bool
@@ -92,7 +92,7 @@ parse_str_address(const string& address_str,
 
 
 /**
-* Return string representation of monero address
+* Return string representation of WAZN or Monero address
 */
 string
 print_address(const address_parse_info& address_info, cryptonote::network_type nettype)
@@ -239,8 +239,8 @@ generate_key_image(const crypto::key_derivation& derivation,
 string
 get_default_lmdb_folder(cryptonote::network_type nettype)
 {
-    // default path to monero folder
-    // on linux this is /home/<username>/.bitmonero
+    // default path to WAZN or Monero folder
+    // on linux this is /home/<username>/.bitwazn
     string default_monero_dir = tools::get_default_data_dir();
 
     if (nettype == cryptonote::network_type::TESTNET)
