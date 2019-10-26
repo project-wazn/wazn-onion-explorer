@@ -50,7 +50,7 @@ namespace xmreg
                 ("enable-autorefresh-option", value<bool>()->default_value(false)->implicit_value(true),
                  "enable users to have the index page on autorefresh")
                 ("enable-emission-monitor", value<bool>()->default_value(false)->implicit_value(true),
-                 "enable WAZN or Monero total emission monitoring thread")
+                 "enable WAZN total emission monitoring thread")
                 ("port,p", value<string>()->default_value("8081"),
                  "default explorer port")
                 ("bindaddr,x", value<string>()->default_value("0.0.0.0"),
@@ -67,8 +67,10 @@ namespace xmreg
                  "maximum time, in milliseconds, to wait for mempool data for the front page")
                 ("mempool-refresh-time", value<string>()->default_value("5"),
                  "time, in seconds, for each refresh of mempool state")
+                 ("concurrency,c", value<size_t>()->default_value(0),
+                  "number of threads handling http queries. Default is 0 which means it is based you on the cpu")
                 ("bc-path,b", value<string>(),
-                 "path to lmdb folder of the blockchain, e.g., ~/.bitmonero/lmdb")
+                 "path to lmdb folder of the blockchain, e.g., ~/.WAZN/lmdb")
                 ("ssl-crt-file", value<string>(),
                  "path to crt file for ssl (https) functionality")
                 ("ssl-key-file", value<string>(),

@@ -67,7 +67,7 @@ endif()
 
 message(STATUS ${MONERO_SOURCE_DIR}/build)
 
-# include WAZN or monero headers
+# include WAZN headers
 include_directories(
 		${MONERO_SOURCE_DIR}/src
 		${MONERO_SOURCE_DIR}/external

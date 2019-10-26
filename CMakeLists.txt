@@ -20,11 +20,14 @@ endif()
 message(STATUS MONERO_DIR ": ${MONERO_DIR}")
 
 set(MONERO_SOURCE_DIR ${MONERO_DIR}
-        CACHE PATH "Path to the root directory for WAZN or Monero")
+        CACHE PATH "Path to the root directory for WAZN")
+endif()
 
-# set location of monero build tree
+if (NOT MONERO_BUILD_DIR)
+# set location of WAZN build tree
 set(MONERO_BUILD_DIR ${MONERO_SOURCE_DIR}/build/release/
-        CACHE PATH "Path to the build directory for WAZN or Monero")
+        CACHE PATH "Path to the build directory for WAZN")
+endif()
 
 set(MY_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake"
         CACHE PATH "The path to the cmake directory of the current project")
@@ -32,7 +35,7 @@ set(MY_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake"
 list(APPEND CMAKE_MODULE_PATH "${MY_CMAKE_DIR}")
 
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${MONERO_BUILD_DIR}"
-        CACHE PATH "Add WAZN or Monero directory for library searching")
+        CACHE PATH "Add WAZN directory for library searching")
 
 include(MyUtils)
 
@@ -65,9 +68,16 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR WIN32)
     set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${MONERO_BUILD_DIR}/external/unbound/libunbound.a)
 endif()
 
+
+
 # include boost headers
 include_directories(${Boost_INCLUDE_DIRS})
+
+# include monero
+include_directories(${MONERO_SOURCE_DIR}/build)
+
 include_directories("ext/mstch/include")
+include_directories("ext/mstch/include/src")
 include_directories("ext/crow")
 
 # add ext/ subfolder

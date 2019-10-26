@@ -72,7 +72,7 @@ get_tx_pub_key_from_str_hash(Blockchain& core_storage, const string& hash_str, t
 }
 
 /**
-* Parse WAZN or Monero address in a string form into
+* Parse WAZN address in a string form into
 * cryptonote::account_public_address object
 */
 bool
@@ -92,7 +92,7 @@ parse_str_address(const string& address_str,
 
 
 /**
-* Return string representation of WAZN or Monero address
+* Return string representation of WAZN address
 */
 string
 print_address(const address_parse_info& address_info, cryptonote::network_type nettype)
@@ -239,8 +239,8 @@ generate_key_image(const crypto::key_derivation& derivation,
 string
 get_default_lmdb_folder(cryptonote::network_type nettype)
 {
-    // default path to WAZN or Monero folder
-    // on linux this is /home/<username>/.bitwazn
+    // default path to WAZN folder
+    // on linux this is /home/<username>/.wazn
     string default_monero_dir = tools::get_default_data_dir();
 
     if (nettype == cryptonote::network_type::TESTNET)
@@ -936,6 +936,7 @@ decode_ringct(rct::rctSig const& rv,
         {
             case rct::RCTTypeSimple:
             case rct::RCTTypeBulletproof:
+            case rct::RCTTypeBulletproof2:
                 amount = rct::decodeRctSimple(rv,
                                               rct::sk2rct(scalar1),
                                               i,
@@ -1269,6 +1270,33 @@ string
 tx_to_hex(transaction const& tx)
 {
     return epee::string_tools::buff_to_hex_nodelimer(t_serializable_object_to_blob(tx));
+}
+
+void get_metric_prefix(cryptonote::difficulty_type hr, double& hr_d, char& prefix)
+{
+  if (hr < 1000)
+  {
+    prefix = 0;
+    return;
+  }
+  static const char metric_prefixes[4] = { 'k', 'M', 'G', 'T' };
+  for (size_t i = 0; i < sizeof(metric_prefixes); ++i)
+  {
+    if (hr < 1000000)
+    {
+      hr_d = hr.convert_to<double>() / 1000;
+      prefix = metric_prefixes[i];
+      return;
+    }
+    hr /= 1000;
+  }
+  prefix = 0;
+}
+
+cryptonote::difficulty_type
+make_difficulty(uint64_t low, uint64_t high)
+{
+    return (cryptonote::difficulty_type(high) << 64) + low;
 }
 
 }

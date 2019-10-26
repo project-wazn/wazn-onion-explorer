@@ -22,32 +22,13 @@ Monero C++ libraries, but also demonstrates how to use:
  - [fmt](https://github.com/fmtlib/fmt) - Small, safe and fast string formatting library
 
 ## Explorer hosts
-
 Tor users:
 
- - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion) (Front-end templates are [maintained by @suhz](https://github.com/suhz/onion-monero-blockchain-explorer/tree/moneroexplorer.com/src/templates)).
-
 Clearnet versions:
- - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
- - [https://MoneroExplorer.com/](https://moneroexplorer.com/) - nice looking one, https enabled.
- - [https://monerohash.com/explorer/](https://monerohash.com/explorer/) - nice looking one, https enabled.
- - [http://explore.MoneroWorld.com](http://explore.moneroworld.com) - same as the second one.
- - [http://monerochain.com/](http://monerochain.com/) - JSON API based, multiple nodes.   
- - [https://blox.minexmr.com/](https://blox.minexmr.com/) - - https enabled.
 
 Testnet version:
 
- - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
- - [https://explorer.monero-otc.com/](https://explorer.monero-otc.com/) - https enabled.
-
 Stagenet version:
-
- - [https://stagenet.xmrchain.net/](https://stagenet.xmrchain.net/)
- - [http://162.210.173.150:8083/](http://162.210.173.150:8083/)
-
-i2p users (main Monero network):
-
- - [http://7o4gezpkye6ekibhgpkg7v626ze4idsirapufzrefkdysa6zxhha.b32.i2p/](http://7o4gezpkye6ekibhgpkg7v626ze4idsirapufzrefkdysa6zxhha.b32.i2p/)
 
 Alternative block explorers:
 
@@ -58,7 +39,7 @@ Alternative block explorers:
 
 ## Onion WAZN Blockchain Explorer features
 
-The key features of the Onion Monero Blockchain Explorer are:
+The key features of the Onion WAZN Blockchain Explorer are:
 
  - no cookies, no web analytics trackers, no images,
  - by default no JavaScript, but can be enabled for client side decoding and proving transactions,
@@ -67,8 +48,8 @@ The key features of the Onion Monero Blockchain Explorer are:
  - showing encrypted payments ID,
  - showing ring signatures,
  - showing transaction extra field,
- - showing public components of Monero addresses,
- - decoding which outputs and mixins belong to the given Monero address and viewkey,
+ - showing public components of WAZN addresses,
+ - decoding which outputs and mixins belong to the given WAZN address and viewkey,
  - can prove that you send Monero to someone,
  - detailed information about ring members, such as, their age, timescale and their ring sizes,
  - showing number of amount output indices,
@@ -80,22 +61,15 @@ The key features of the Onion Monero Blockchain Explorer are:
  - decoding outputs and proving txs sent to sub-address.
 
 
-## Development branch
-
-Current development branch:
-
- - https://github.com/moneroexamples/onion-monero-blockchain-explorer/tree/devel
-
-
 
 ## Compilation on Ubuntu 16.04/18.04
 
-##### Compile latest WAZN or Monero version (0.13+)
+##### Compile latest WAZN version (v1.0.0)
 
-Download and compile recent WAZN or Monero into your home folder:
+Download and compile recent WAZN source code into your home folder:
 
 ```bash
-# first install monero dependecines
+# first install WAZN dependecines
 sudo apt update
 
 sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libcurl4-openssl-dev libgtest-dev libreadline-dev libzmq3-dev libsodium-dev libhidapi-dev libhidapi-libusb0
@@ -103,21 +77,20 @@ sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound
 # go to home folder
 cd ~
 
-git clone --recursive https://github.com/Project-WAZN/WAZN
+git clone --recursive https://github.com/Project-WAZN/WAZN.git
 
 cd WAZN/
 
-
-USE_SINGLE_BUILDDIR=1 make
+make release-static
 ```
 
 ##### Compile and run the explorer
 
-Once the WAZN or Monero compiles, the explorer can be downloaded and compiled
+Once the WAZN compiles, the explorer can be downloaded and compiled
 as follows:
 
 ```bash
-# go to home folder if still in ~/monero
+# go to home folder if still in ~/wazn
 cd ~
 
 # download the source code
@@ -132,8 +105,8 @@ mkdir build && cd build
 # create the makefile
 cmake ..
 
-# altearnatively can use: cmake -DMONERO_DIR=/path/to/monero_folder ..
-# if monero is not in ~/monero
+# altearnatively can use: cmake -DMONERO_DIR=/path/to/wazn_folder ..
+# if WAZN is not in ~/wazn
 #
 # also can build with ASAN (sanitizers), for example
 # cmake -DSANITIZE_ADDRESS=On ..
@@ -148,19 +121,19 @@ To run it:
 ./xmrblocks
 ```
 
-By default it will look for blockchain in its default location i.e., `~/.bitmonero/lmdb`.
+By default it will look for blockchain in its default location i.e., `~/.wazn/lmdb`.
 You can use `-b` option if its in different location.
 
 For example:
 
 ```bash
-./xmrblocks -b /home/mwo/non-defult-monero-location/lmdb/
+./xmrblocks -b /home/mwo/non-defult-wazn-location/lmdb/
 ```
 
 Example output:
 
 ```bash
-[mwo@arch onion-monero-blockchain-explorer]$ ./xmrblocks
+[mwo@arch onion-wazn-blockchain-explorer]$ ./xmrblocks
 2016-May-28 10:04:49.160280 Blockchain initialized. last block: 1056761, d0.h0.m12.s47 time ago, current difficulty: 1517857750
 (2016-05-28 02:04:49) [INFO    ] Crow/0.1 server is running, local port 8081
 ```
@@ -234,7 +207,7 @@ alias xmrblockstestnet='~/onion-monero-blockchain-explorer/build/xmrblocks -t --
 
 These are aliases similar to those used for http://139.162.32.245:8081/ and http://139.162.32.245:8082/, respectively.
 
-## Enable Monero emission
+## Enable WAZN emission
 
 Obtaining current Monero emission amount is not straight forward. Thus, by default it is
 disabled. To enable it use `--enable-emission-monitor` flag, e.g.,
@@ -265,7 +238,7 @@ Every 10000 blocks, the thread will save current emission in a file, by default,
  displayed on the front page, e.g., :
 
 ```
-Monero emission (fees) is 14485540.430 (52545.373) as of 1313448 block
+WAZN emission (fees) is 14485540.430 (52545.373) as of 1313448 block
 ```
 
 The values given, can be checked using Monero daemon's  `print_coinbase_tx_sum` command.
@@ -800,13 +773,3 @@ curl  -w "\n" -X GET "http://139.162.32.245:8081/api/rawtransaction/6093260dbe79
 ```
 
 Example result not shown.
-
-## Other monero examples
-
-Other examples can be found on  [github](https://github.com/moneroexamples?tab=repositories).
-Please know that some of the examples/repositories are not
-finished and may not work as intended.
-
-## How can you help?
-
-Constructive criticism, code and website edits are always good. They can be made through github.

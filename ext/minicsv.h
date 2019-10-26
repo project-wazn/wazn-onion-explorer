@@ -271,7 +271,7 @@ namespace csv
 		}
 		void init()
 		{
-			after_newline = true; 
+			after_newline = true;
 			delimiter = ',';
 			escape_str = "##";
 			surround_quote_on_str = false;
@@ -351,7 +351,7 @@ template<typename T>
 csv::ifstream& operator >> (csv::ifstream& istm, T& val)
 {
 	std::string str = istm.get_delimited_str();
-	
+
 #ifdef USE_BOOST_LEXICAL_CAST
 	val = boost::lexical_cast<T>(str);
 #else
