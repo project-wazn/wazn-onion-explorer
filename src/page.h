@@ -11,7 +11,7 @@
 
 #include "monero_headers.h"
 
-
+#include "../gen/version.h"
 
 #include "MicroCore.h"
 #include "tools.h"
