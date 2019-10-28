@@ -7067,26 +7067,6 @@ are_absolute_offsets_good(
     return !offset_too_large;
 }
 
-string
-get_footer()
-{
-    // set last git commit date based on
-    // autogenrated version.h during compilation
-    static const mstch::map footer_context {
-            {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
-            {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
-            {"git_branch_name"     , string {GIT_BRANCH_NAME}},
-            {"monero_version_full" , string {MONERO_VERSION_FULL}},
-            {"api"                 , std::to_string(ONIONEXPLORER_RPC_VERSION_MAJOR)
-                                     + "."
-                                     + std::to_string(ONIONEXPLORER_RPC_VERSION_MINOR)},
-    };
-
-    string footer_html = mstch::render(xmreg::read(TMPL_FOOTER), footer_context);
-
-    return footer_html;
-}
-
 void
 add_css_style(mstch::map& context)
 {
