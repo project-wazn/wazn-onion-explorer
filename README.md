@@ -739,7 +739,7 @@ curl  -w "\n" -X GET "http://127.0.0.1:8081/api/version"
     "git_branch_name": "update_to_current_monero",
     "last_git_commit_date": "2017-07-25",
     "last_git_commit_hash": "a549f25",
-    "monero_version_full": "0.10.3.1-ab594cfe"
+    "wazn_version_full": "0.10.3.1-ab594cfe"
   },
   "status": "success"
 }
