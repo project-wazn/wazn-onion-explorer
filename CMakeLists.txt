@@ -19,10 +19,8 @@ endif()
 
 message(STATUS MONERO_DIR ": ${MONERO_DIR}")
 
-if (NOT MONERO_DIR)
 set(MONERO_SOURCE_DIR ${MONERO_DIR}
         CACHE PATH "Path to the root directory for WAZN")
-endif()
 
 if (NOT MONERO_BUILD_DIR)
 # set location of WAZN build tree
