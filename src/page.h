@@ -937,8 +937,8 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
         else
             hash_rate = fmt::format("{:d} H/s", current_network_info.hash_rate);
 
-        pair<string, string> network_info_age = get_age(local_copy_server_timestamp,
-                                                        current_network_info.info_timestamp);
+    pair<string, string> network_info_age = get_age(local_copy_server_timestamp,
+                                                    current_network_info.info_timestamp);
 
     // if network info is younger than 2 minute, assume its current. No sense
     // showing that it is not current if its less then block time.
