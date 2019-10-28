@@ -213,7 +213,7 @@ main(int ac, const char* av[])
         // This thread stores the current emission
         // which it has caluclated in
         // <blockchain_path>/emission_amount.txt file,
-        // e.g., ~/.wazn/lmdb/emission_amount.txt.
+        // e.g., ~/.WAZN/lmdb/emission_amount.txt.
         // So instead of calcualting the emission
         // from scrach whenever the explorer is started,
         // the thread is initalized with the values

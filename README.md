@@ -121,7 +121,7 @@ To run it:
 ./xmrblocks
 ```
 
-By default it will look for blockchain in its default location i.e., `~/.wazn/lmdb`.
+By default it will look for blockchain in its default location i.e., `~/WAZN/lmdb`.
 You can use `-b` option if its in different location.
 
 For example:
