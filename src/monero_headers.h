@@ -16,7 +16,7 @@
 
 #define FEE_ESTIMATE_GRACE_BLOCKS 10 // estimate fee valid for that many blocks
 
-#include "release/version/version.h"
+#include "version.h"
 
 #include "net/http_client.h"
 #include "storages/http_abstract_invoke.h"
