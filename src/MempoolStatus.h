@@ -2,8 +2,8 @@
 // Created by mwo on 28/05/17.
 //
 
-#ifndef XMRBLOCKS_MEMPOOLSTATUS_H
-#define XMRBLOCKS_MEMPOOLSTATUS_H
+#ifndef WAZNBLOCKS_MEMPOOLSTATUS_H
+#define WAZNBLOCKS_MEMPOOLSTATUS_H
 
 
 #include "MicroCore.h"
@@ -164,4 +164,4 @@ struct MempoolStatus
 };
 
 }
-#endif //XMRBLOCKS_MEMPOOLSTATUS_H
+#endif //WAZNBLOCKS_MEMPOOLSTATUS_H

@@ -271,7 +271,7 @@ main(int ac, const char* av[])
 
     // create instance of page class which
     // contains logic for the website
-    xmreg::page xmrblocks(&mcore,
+    xmreg::page waznblocks(&mcore,
                           core_storage,
                           deamon_url,
                           nettype,
@@ -302,29 +302,29 @@ main(int ac, const char* av[])
 
     CROW_ROUTE(app, "/")
     ([&]() {
-        return myxmr::htmlresponse(xmrblocks.index2());
+        return myxmr::htmlresponse(waznblocks.index2());
     });
 
     CROW_ROUTE(app, "/page/<uint>")
     ([&](size_t page_no) {
-        return myxmr::htmlresponse(xmrblocks.index2(page_no));
+        return myxmr::htmlresponse(waznblocks.index2(page_no));
     });
 
     CROW_ROUTE(app, "/block/<uint>")
     ([&](size_t block_height) {
-        return myxmr::htmlresponse(xmrblocks.show_block(block_height));
+        return myxmr::htmlresponse(waznblocks.show_block(block_height));
     });
 
     CROW_ROUTE(app, "/block/<string>")
     ([&](string block_hash) {
         return myxmr::htmlresponse(
-                xmrblocks.show_block(remove_bad_chars(block_hash)));
+                waznblocks.show_block(remove_bad_chars(block_hash)));
     });
 
     CROW_ROUTE(app, "/tx/<string>")
     ([&](string tx_hash) {
         return myxmr::htmlresponse(
-                xmrblocks.show_tx(remove_bad_chars(tx_hash)));
+                waznblocks.show_tx(remove_bad_chars(tx_hash)));
     });
     if (enable_autorefresh_option)
     {
@@ -333,7 +333,7 @@ main(int ac, const char* av[])
             bool refresh_page {true};
             uint16_t with_ring_signatures {0};
             return myxmr::htmlresponse(
-                xmrblocks.show_tx(remove_bad_chars(tx_hash), with_ring_signatures, refresh_page));
+                waznblocks.show_tx(remove_bad_chars(tx_hash), with_ring_signatures, refresh_page));
         });
     }
 
@@ -342,37 +342,37 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/txhex/<string>")
         ([&](string tx_hash) {
             return crow::response(
-                    xmrblocks.show_tx_hex(remove_bad_chars(tx_hash)));
+                    waznblocks.show_tx_hex(remove_bad_chars(tx_hash)));
         });
 
         CROW_ROUTE(app, "/ringmembershex/<string>")
         ([&](string tx_hash) {
             return crow::response(
-                    xmrblocks.show_ringmembers_hex(remove_bad_chars(tx_hash)));
+                    waznblocks.show_ringmembers_hex(remove_bad_chars(tx_hash)));
         });
 
         CROW_ROUTE(app, "/blockhex/<uint>")
         ([&](size_t block_height) {
             return crow::response(
-                    xmrblocks.show_block_hex(block_height, false));
+                    waznblocks.show_block_hex(block_height, false));
         });
 
         CROW_ROUTE(app, "/blockhexcomplete/<uint>")
         ([&](size_t block_height) {
             return crow::response(
-                    xmrblocks.show_block_hex(block_height, true));
+                    waznblocks.show_block_hex(block_height, true));
         });
 
 //        CROW_ROUTE(app, "/ringmemberstxhex/<string>")
 //        ([&](string tx_hash) {
 //            return crow::response(
-//              xmrblocks.show_ringmemberstx_hex(remove_bad_chars(tx_hash)));
+//              waznblocks.show_ringmemberstx_hex(remove_bad_chars(tx_hash)));
 //        });
 
         CROW_ROUTE(app, "/ringmemberstxhex/<string>")
         ([&](string tx_hash) {
             return myxmr::jsonresponse {
-                xmrblocks.show_ringmemberstx_jsonhex(
+                waznblocks.show_ringmemberstx_jsonhex(
                         remove_bad_chars(tx_hash))};
         });
 
@@ -382,7 +382,7 @@ main(int ac, const char* av[])
     ([&](string tx_hash, uint16_t with_ring_signatures)
      {
         return myxmr::htmlresponse(
-                xmrblocks.show_tx(remove_bad_chars(tx_hash),
+                waznblocks.show_tx(remove_bad_chars(tx_hash),
                     with_ring_signatures));
     });
     if (enable_autorefresh_option)
@@ -391,7 +391,7 @@ main(int ac, const char* av[])
         ([&](string tx_hash, uint16_t with_ring_signature) {
             bool refresh_page {true};
             return myxmr::htmlresponse(
-                xmrblocks.show_tx(remove_bad_chars(tx_hash), with_ring_signature, refresh_page));
+                waznblocks.show_tx(remove_bad_chars(tx_hash), with_ring_signature, refresh_page));
         });
     }
 
@@ -419,7 +419,7 @@ main(int ac, const char* av[])
 
         string domain      =  get_domain(req);
 
-        string response = xmrblocks.show_my_outputs(
+        string response = waznblocks.show_my_outputs(
                                          tx_hash, xmr_address,
                                          viewkey, raw_tx_data,
                                          domain);
@@ -434,7 +434,7 @@ main(int ac, const char* av[])
 
         string domain = get_domain(req);
 
-        return myxmr::htmlresponse(xmrblocks.show_my_outputs(
+        return myxmr::htmlresponse(waznblocks.show_my_outputs(
                                          remove_bad_chars(tx_hash),
                                          remove_bad_chars(xmr_address),
                                          remove_bad_chars(viewkey),
@@ -467,7 +467,7 @@ main(int ac, const char* av[])
 
             string domain      = get_domain(req);
 
-            return myxmr::htmlresponse(xmrblocks.show_prove(tx_hash,
+            return myxmr::htmlresponse(waznblocks.show_prove(tx_hash,
                                         xmr_address,
                                         tx_prv_key,
                                         raw_tx_data,
@@ -482,7 +482,7 @@ main(int ac, const char* av[])
 
         string domain = get_domain(req);
 
-        return myxmr::htmlresponse(xmrblocks.show_prove(
+        return myxmr::htmlresponse(waznblocks.show_prove(
                                     remove_bad_chars(tx_hash),
                                     remove_bad_chars(xmr_address),
                                     remove_bad_chars(tx_prv_key),
@@ -494,7 +494,7 @@ main(int ac, const char* av[])
     {
         CROW_ROUTE(app, "/rawtx")
         ([&]() {
-            return myxmr::htmlresponse(xmrblocks.show_rawtx());
+            return myxmr::htmlresponse(waznblocks.show_rawtx());
         });
 
         CROW_ROUTE(app, "/checkandpush").methods("POST"_method)
@@ -515,10 +515,10 @@ main(int ac, const char* av[])
 
             if (action == "check")
                 return myxmr::htmlresponse(
-                        xmrblocks.show_checkrawtx(raw_tx_data, action));
+                        waznblocks.show_checkrawtx(raw_tx_data, action));
             else if (action == "push")
                 return myxmr::htmlresponse(
-                        xmrblocks.show_pushrawtx(raw_tx_data, action));
+                        waznblocks.show_pushrawtx(raw_tx_data, action));
             return string("Provided action is neither check nor push");
 
         });
@@ -528,7 +528,7 @@ main(int ac, const char* av[])
     {
         CROW_ROUTE(app, "/rawkeyimgs")
         ([&]() {
-            return myxmr::htmlresponse(xmrblocks.show_rawkeyimgs());
+            return myxmr::htmlresponse(waznblocks.show_rawkeyimgs());
         });
 
         CROW_ROUTE(app, "/checkrawkeyimgs").methods("POST"_method)
@@ -552,7 +552,7 @@ main(int ac, const char* av[])
             string viewkey  = remove_bad_chars(post_body["viewkey"]);
 
             return myxmr::htmlresponse(
-                    xmrblocks.show_checkrawkeyimgs(raw_data, viewkey));
+                    waznblocks.show_checkrawkeyimgs(raw_data, viewkey));
         });
     }
 
@@ -561,7 +561,7 @@ main(int ac, const char* av[])
     {
         CROW_ROUTE(app, "/rawoutputkeys")
         ([&]() {
-            return myxmr::htmlresponse(xmrblocks.show_rawoutputkeys());
+            return myxmr::htmlresponse(waznblocks.show_rawoutputkeys());
         });
 
         CROW_ROUTE(app, "/checkrawoutputkeys").methods("POST"_method)
@@ -586,7 +586,7 @@ main(int ac, const char* av[])
             string viewkey  = remove_bad_chars(post_body["viewkey"]);
 
             return myxmr::htmlresponse(
-                    xmrblocks.show_checkcheckrawoutput(raw_data, viewkey));
+                    waznblocks.show_checkcheckrawoutput(raw_data, viewkey));
         });
     }
 
@@ -594,25 +594,25 @@ main(int ac, const char* av[])
     CROW_ROUTE(app, "/search").methods("GET"_method)
     ([&](const crow::request& req) {
         return myxmr::htmlresponse(
-                xmrblocks.search(
+                waznblocks.search(
                     remove_bad_chars(
                         string(req.url_params.get("value")))));
     });
 
     CROW_ROUTE(app, "/mempool")
     ([&]() {
-        return myxmr::htmlresponse(xmrblocks.mempool(true));
+        return myxmr::htmlresponse(waznblocks.mempool(true));
     });
 
     // alias to  "/mempool"
     CROW_ROUTE(app, "/txpool")
     ([&]() {
-        return myxmr::htmlresponse(xmrblocks.mempool(true));
+        return myxmr::htmlresponse(waznblocks.mempool(true));
     });
 
 //    CROW_ROUTE(app, "/altblocks")
 //    ([&](const crow::request& req) {
-//        return xmrblocks.altblocks();
+//        return waznblocks.altblocks();
 //    });
 
     CROW_ROUTE(app, "/robots.txt")
@@ -628,54 +628,54 @@ main(int ac, const char* av[])
 
         CROW_ROUTE(app, "/js/jquery.min.js")
         ([&]() {
-            return xmrblocks.get_js_file("jquery.min.js");
+            return waznblocks.get_js_file("jquery.min.js");
         });
 
         CROW_ROUTE(app, "/js/crc32.js")
         ([&]() {
-            return xmrblocks.get_js_file("crc32.js");
+            return waznblocks.get_js_file("crc32.js");
         });
 
         CROW_ROUTE(app, "/js/biginteger.js")
         ([&]() {
-            return xmrblocks.get_js_file("biginteger.js");
+            return waznblocks.get_js_file("biginteger.js");
         });
 
         CROW_ROUTE(app, "/js/crypto.js")
         ([&]() {
-            return xmrblocks.get_js_file("crypto.js");
+            return waznblocks.get_js_file("crypto.js");
         });
 
         CROW_ROUTE(app, "/js/config.js")
         ([&]() {
-            return xmrblocks.get_js_file("config.js");
+            return waznblocks.get_js_file("config.js");
         });
 
         CROW_ROUTE(app, "/js/nacl-fast-cn.js")
         ([&]() {
-            return xmrblocks.get_js_file("nacl-fast-cn.js");
+            return waznblocks.get_js_file("nacl-fast-cn.js");
         });
 
         CROW_ROUTE(app, "/js/base58.js")
         ([&]() {
-            return xmrblocks.get_js_file("base58.js");
+            return waznblocks.get_js_file("base58.js");
         });
 
         CROW_ROUTE(app, "/js/cn_util.js")
         ([&]() {
-            return xmrblocks.get_js_file("cn_util.js");
+            return waznblocks.get_js_file("cn_util.js");
         });
 
         CROW_ROUTE(app, "/js/sha3.js")
         ([&]() {
-            return xmrblocks.get_js_file("sha3.js");
+            return waznblocks.get_js_file("sha3.js");
         });
 
         CROW_ROUTE(app, "/js/all_in_one.js")
         ([&]() {
             // /js/all_in_one.js file does not exist. it is generated on the fly
             // from the above real files.
-            return xmrblocks.get_js_file("all_in_one.js");
+            return waznblocks.get_js_file("all_in_one.js");
         });
 
     } // if (enable_js)
@@ -688,7 +688,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/transaction/<string>")
         ([&](string tx_hash) {
 
-            myxmr::jsonresponse r{xmrblocks.json_transaction(remove_bad_chars(tx_hash))};
+            myxmr::jsonresponse r{waznblocks.json_transaction(remove_bad_chars(tx_hash))};
 
             return r;
         });
@@ -696,7 +696,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/rawtransaction/<string>")
         ([&](string tx_hash) {
 
-            myxmr::jsonresponse r{xmrblocks.json_rawtransaction(remove_bad_chars(tx_hash))};
+            myxmr::jsonresponse r{waznblocks.json_rawtransaction(remove_bad_chars(tx_hash))};
 
             return r;
         });
@@ -704,7 +704,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/detailedtransaction/<string>")
         ([&](string tx_hash) {
 
-            myxmr::jsonresponse r{xmrblocks.json_detailedtransaction(remove_bad_chars(tx_hash))};
+            myxmr::jsonresponse r{waznblocks.json_detailedtransaction(remove_bad_chars(tx_hash))};
 
             return r;
         });
@@ -712,7 +712,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/block/<string>")
         ([&](string block_no_or_hash) {
 
-            myxmr::jsonresponse r{xmrblocks.json_block(remove_bad_chars(block_no_or_hash))};
+            myxmr::jsonresponse r{waznblocks.json_block(remove_bad_chars(block_no_or_hash))};
 
             return r;
         });
@@ -720,7 +720,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/rawblock/<string>")
         ([&](string block_no_or_hash) {
 
-            myxmr::jsonresponse r{xmrblocks.json_rawblock(remove_bad_chars(block_no_or_hash))};
+            myxmr::jsonresponse r{waznblocks.json_rawblock(remove_bad_chars(block_no_or_hash))};
 
             return r;
         });
@@ -734,7 +734,7 @@ main(int ac, const char* av[])
             string limit = regex_search(req.raw_url, regex {"limit=\\d+"}) ?
                            req.url_params.get("limit") : "25";
 
-            myxmr::jsonresponse r{xmrblocks.json_transactions(
+            myxmr::jsonresponse r{waznblocks.json_transactions(
                     remove_bad_chars(page), remove_bad_chars(limit))};
 
             return r;
@@ -752,7 +752,7 @@ main(int ac, const char* av[])
             string limit = regex_search(req.raw_url, regex {"limit=\\d+"}) ?
                            req.url_params.get("limit") : "100000000";
 
-            myxmr::jsonresponse r{xmrblocks.json_mempool(
+            myxmr::jsonresponse r{waznblocks.json_mempool(
                     remove_bad_chars(page), remove_bad_chars(limit))};
 
             return r;
@@ -761,7 +761,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/search/<string>")
         ([&](string search_value) {
 
-            myxmr::jsonresponse r{xmrblocks.json_search(remove_bad_chars(search_value))};
+            myxmr::jsonresponse r{waznblocks.json_search(remove_bad_chars(search_value))};
 
             return r;
         });
@@ -769,7 +769,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/networkinfo")
         ([&]() {
 
-            myxmr::jsonresponse r{xmrblocks.json_networkinfo()};
+            myxmr::jsonresponse r{waznblocks.json_networkinfo()};
 
             return r;
         });
@@ -777,7 +777,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/emission")
         ([&]() {
 
-            myxmr::jsonresponse r{xmrblocks.json_emission()};
+            myxmr::jsonresponse r{waznblocks.json_emission()};
 
             return r;
         });
@@ -807,7 +807,7 @@ main(int ac, const char* av[])
                 cerr << "Cant parse tx_prove as bool. Using default value" << endl;
             }
 
-            myxmr::jsonresponse r{xmrblocks.json_outputs(
+            myxmr::jsonresponse r{waznblocks.json_outputs(
                     remove_bad_chars(tx_hash),
                     remove_bad_chars(address),
                     remove_bad_chars(viewkey),
@@ -844,7 +844,7 @@ main(int ac, const char* av[])
                      << endl;
             }
 
-            myxmr::jsonresponse r{xmrblocks.json_outputsblocks(
+            myxmr::jsonresponse r{waznblocks.json_outputsblocks(
                     remove_bad_chars(limit),
                     remove_bad_chars(address),
                     remove_bad_chars(viewkey),
@@ -856,7 +856,7 @@ main(int ac, const char* av[])
         CROW_ROUTE(app, "/api/version")
         ([&]() {
 
-            myxmr::jsonresponse r{xmrblocks.json_version()};
+            myxmr::jsonresponse r{waznblocks.json_version()};
 
             return r;
         });
@@ -869,7 +869,7 @@ main(int ac, const char* av[])
         ([&]() {
             uint64_t page_no {0};
             bool refresh_page {true};
-            return xmrblocks.index2(page_no, refresh_page);
+            return waznblocks.index2(page_no, refresh_page);
         });
     }
 
