@@ -2,20 +2,20 @@
 // Created by mwo on 5/11/15.
 //
 
-#ifndef XMREG01_TOOLS_H
-#define XMREG01_TOOLS_H
+#ifndef WAZNEG01_TOOLS_H
+#define WAZNEG01_TOOLS_H
 
 #define PATH_SEPARARTOR '/'
 
-#define XMR_AMOUNT(value) \
-    static_cast<double>(value) / 1e8
+#define WAZN_AMOUNT(value) \
+    static_cast<double>(value) / 1e12
 
 #define REMOVE_HASH_BRAKETS(a_hash) \
     a_hash.substr(1, a_hash.size()-2)
 
 
 
-#include "bittube_headers.h"
+#include "wazn_headers.h"
 
 #include "../ext/fmt/ostream.h"
 #include "../ext/fmt/format.h"
@@ -38,7 +38,7 @@
  * Names are rather self-explanatory, so I think
  * there is no reason for any detailed explanations here
  */
-namespace xmreg
+namespace wazneg
 {
 
 using namespace cryptonote;
@@ -222,9 +222,9 @@ get_payment_id(const transaction& tx,
 
 
 inline double
-get_xmr(uint64_t core_amount)
+get_wazn(uint64_t core_amount)
 {
-    return  static_cast<double>(core_amount) / 1e8;
+    return  static_cast<double>(core_amount) / 1e12;
 }
 
 array<size_t, 5>
@@ -273,21 +273,21 @@ get_tx_pub_key_from_received_outs(const transaction &tx);
 
 static
 string
-xmr_amount_to_str(const uint64_t& xmr_amount,
-                  string _format="{:0.8f}",
+wazn_amount_to_str(const uint64_t& wazn_amount,
+                  string _format="{:0.12f}",
                   bool zero_to_question_mark=true)
 {
     string amount_str = "?";
 
     if (!zero_to_question_mark)
     {
-        amount_str = fmt::format(_format, XMR_AMOUNT(xmr_amount));
+        amount_str = fmt::format(_format, WAZN_AMOUNT(wazn_amount));
     }
     else
     {
-        if (xmr_amount > 0 && zero_to_question_mark == true)
+        if (wazn_amount > 0 && zero_to_question_mark == true)
         {
-            amount_str = fmt::format(_format, XMR_AMOUNT(xmr_amount));
+            amount_str = fmt::format(_format, WAZN_AMOUNT(wazn_amount));
         }
     }
 
@@ -331,7 +331,7 @@ void chunks(Iterator begin,
     }
     while(std::distance(chunk_begin,end) > 0);
 }
-    
+
 /*
  * Remove all characters in in_str that match the given
  * regular expression
@@ -375,4 +375,4 @@ tx_to_hex(transaction const& tx);
 
 }
 
-#endif //XMREG01_TOOLS_H
+#endif //WAZNEG01_TOOLS_H

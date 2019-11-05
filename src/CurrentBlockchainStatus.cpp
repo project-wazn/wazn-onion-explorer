@@ -4,7 +4,7 @@
 
 #include "CurrentBlockchainStatus.h"
 
-namespace xmreg
+namespace wazneg
 {
 
 using namespace std;
@@ -190,7 +190,7 @@ CurrentBlockchainStatus::load_current_emission_amount()
 {
     string emmision_saved_file = get_output_file_path().string();
 
-    string last_saved_emmision = xmreg::read(emmision_saved_file);
+    string last_saved_emmision = wazneg::read(emmision_saved_file);
 
     if (last_saved_emmision.empty())
     {
@@ -297,13 +297,13 @@ CurrentBlockchainStatus::is_thread_running()
    return is_running;
 }
 
-bf::path CurrentBlockchainStatus::blockchain_path {"/home/mwo/.bittube/lmdb"};
+bf::path CurrentBlockchainStatus::blockchain_path {"/home/mwo/.wazn/lmdb"};
 
 cryptonote::network_type CurrentBlockchainStatus::nettype {cryptonote::network_type::MAINNET};
 
 string CurrentBlockchainStatus::output_file {"emission_amount.txt"};
 
-string CurrentBlockchainStatus::daemon_url {"http:://127.0.0.1:24182"};
+string CurrentBlockchainStatus::daemon_url {"http:://127.0.0.1:11787"};
 
 uint64_t  CurrentBlockchainStatus::blockchain_chunk_size {10000};
 
@@ -318,5 +318,5 @@ boost::thread      CurrentBlockchainStatus::m_thread;
 atomic<bool>     CurrentBlockchainStatus::is_running {false};
 
 Blockchain*       CurrentBlockchainStatus::core_storage {nullptr};
-xmreg::MicroCore*  CurrentBlockchainStatus::mcore {nullptr};
+wazneg::MicroCore*  CurrentBlockchainStatus::mcore {nullptr};
 }

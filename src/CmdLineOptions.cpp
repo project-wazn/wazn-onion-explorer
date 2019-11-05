@@ -5,7 +5,7 @@
 #include "CmdLineOptions.h"
 
 
-namespace xmreg
+namespace wazneg
 {
     /**
      * Take the acc and *avv[] from the main() and check and parse
@@ -18,7 +18,7 @@ namespace xmreg
         p.add("txhash", -1);
 
         options_description desc(
-                "bittube-blockchain-explorer, BitTube Blockchain Explorer");
+                "waznblocks, WAZN Onion Blockchain Explorer");
 
         desc.add_options()
                 ("help,h", value<bool>()->default_value(false)->implicit_value(true),
@@ -52,7 +52,7 @@ namespace xmreg
                 ("enable-autorefresh-option", value<bool>()->default_value(false)->implicit_value(true),
                  "enable users to have the index page on autorefresh")
                 ("enable-emission-monitor", value<bool>()->default_value(false)->implicit_value(true),
-                 "enable BitTube total emission monitoring thread")
+                 "enable WAZN total emission monitoring thread")
                 ("port,p", value<string>()->default_value("8081"),
                  "default explorer port")
                 ("bindaddr,x", value<string>()->default_value("0.0.0.0"),
@@ -72,13 +72,13 @@ namespace xmreg
                 ("concurrency,c", value<size_t>()->default_value(0),
                  "number of threads handling http queries. Default is 0 which means it is based you on the cpu")
                 ("bc-path,b", value<string>(),
-                 "path to lmdb folder of the blockchain, e.g., ~/.bittube/lmdb")
+                 "path to lmdb folder of the blockchain, e.g., ~/.wazn/lmdb")
                 ("ssl-crt-file", value<string>(),
                  "path to crt file for ssl (https) functionality")
                 ("ssl-key-file", value<string>(),
                  "path to key file for ssl (https) functionality")
-                ("daemon-url,d", value<string>()->default_value("http:://127.0.0.1:24182"),
-                 "BitTube daemon url");
+                ("daemon-url,d", value<string>()->default_value("http:://127.0.0.1:11787"),
+                 "WAZN daemon url");
 
 
         store(command_line_parser(acc, avv)

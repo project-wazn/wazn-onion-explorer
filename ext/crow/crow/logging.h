@@ -139,4 +139,3 @@ namespace crow
 #define CROW_LOG_DEBUG      \
         if (crow::logger::get_current_log_level() <= crow::LogLevel::Debug) \
             crow::logger("DEBUG   ", crow::LogLevel::Debug)
-

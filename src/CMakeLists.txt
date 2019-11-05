@@ -5,7 +5,7 @@ project(myxrm)
 set(SOURCE_HEADERS
         MicroCore.h
 		tools.h
-		bittube_headers.h
+		wazn_headers.h
 		CurrentBlockchainStatus.h)
 
 set(SOURCE_FILES

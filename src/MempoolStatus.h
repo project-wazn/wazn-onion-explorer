@@ -2,8 +2,8 @@
 // Created by mwo on 28/05/17.
 //
 
-#ifndef XMRBLOCKS_MEMPOOLSTATUS_H
-#define XMRBLOCKS_MEMPOOLSTATUS_H
+#ifndef WAZNBLOCKS_MEMPOOLSTATUS_H
+#define WAZNBLOCKS_MEMPOOLSTATUS_H
 
 
 #include "MicroCore.h"
@@ -16,7 +16,7 @@
 #include <mutex>
 #include <atomic>
 
-namespace xmreg
+namespace wazneg
 {
 
 struct MempoolStatus
@@ -41,8 +41,8 @@ struct MempoolStatus
         string fee_micro_str;
         string payed_for_kB_str;
         string payed_for_kB_micro_str;
-        string xmr_inputs_str;
-        string xmr_outputs_str;
+        string wazn_inputs_str;
+        string wazn_outputs_str;
         string timestamp_str;
         string txsize;
 
@@ -164,4 +164,4 @@ struct MempoolStatus
 };
 
 }
-#endif //XMRBLOCKS_MEMPOOLSTATUS_H
+#endif //WAZNBLOCKS_MEMPOOLSTATUS_H

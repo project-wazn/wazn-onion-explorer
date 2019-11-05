@@ -2,15 +2,15 @@
 // Created by mwo on 5/11/15.
 //
 
-#ifndef XMREG01_MICROCORE_H
-#define XMREG01_MICROCORE_H
+#ifndef WAZNEG01_MICROCORE_H
+#define WAZNEG01_MICROCORE_H
 
 #include <iostream>
 
-#include "bittube_headers.h"
+#include "wazn_headers.h"
 #include "tools.h"
 
-namespace xmreg
+namespace wazneg
 {
     using namespace cryptonote;
     using namespace crypto;
@@ -90,4 +90,4 @@ namespace xmreg
 
 
 
-#endif //XMREG01_MICROCORE_H
+#endif //WAZNEG01_MICROCORE_H

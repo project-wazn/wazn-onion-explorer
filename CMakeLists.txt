@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(PROJECT_NAME
-        bittube-blockchain-explorer)
+        waznblocks)
 
 
 project(${PROJECT_NAME})
@@ -13,21 +13,21 @@ if (WIN32)
 endif()
 
 
-if (NOT BITTUBE_DIR)
-    set(BITTUBE_DIR ~/bittube)
+if (NOT WAZN_DIR)
+    set(WAZN_DIR ~/wazn)
 endif()
 
-message(STATUS BITTUBE_DIR ": ${BITTUBE_DIR}")
+message(STATUS WAZN_DIR ": ${WAZN_DIR}")
 
-if (NOT BITTUBE_SOURCE_DIR)
-    set(BITTUBE_SOURCE_DIR ${BITTUBE_DIR}
-            CACHE PATH "Path to the root directory for BitTube")
+if (NOT WAZN_SOURCE_DIR)
+    set(WAZN_SOURCE_DIR ${WAZN}
+            CACHE PATH "Path to the root directory for WAZN")
 endif()
 
-if (NOT BITTUBE_BUILD_DIR)
-    # set location of BitTube build tree
-    set(BITTUBE_BUILD_DIR ${BITTUBE_SOURCE_DIR}/build/release/
-            CACHE PATH "Path to the build directory for BitTube")
+if (NOT WAZN_BUILD_DIR)
+    # set location of WAZN build tree
+    set(WAZN_BUILD_DIR ${WAZN_SOURCE_DIR}/build/release/
+            CACHE PATH "Path to the build directory for WAZN")
 endif()
 
 set(MY_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake"
@@ -35,12 +35,12 @@ set(MY_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake"
 
 list(APPEND CMAKE_MODULE_PATH "${MY_CMAKE_DIR}")
 
-set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${BITTUBE_BUILD_DIR}"
-        CACHE PATH "Add BitTube directory for library searching")
+set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${WAZN_BUILD_DIR}"
+        CACHE PATH "Add WAZN directory for library searching")
 
 include(MyUtils)
 
-find_package(BitTube)
+find_package(WAZN)
 
 # find boost
 find_package(Boost COMPONENTS
@@ -66,7 +66,7 @@ endif()
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR WIN32)
     add_library(unbound STATIC IMPORTED)
-    set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${BITTUBE_BUILD_DIR}/external/unbound/libunbound.a)
+    set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${WAZN_BUILD_DIR}/external/unbound/libunbound.a)
 endif()
 
 
@@ -74,8 +74,8 @@ endif()
 # include boost headers
 include_directories(${Boost_INCLUDE_DIRS})
 
-# include bittube
-include_directories(${BITTUBE_SOURCE_DIR}/build)
+# include wazn
+include_directories(${WAZN_SOURCE_DIR}/build)
 
 include_directories("ext/mstch/include")
 include_directories("ext/mstch/include/src")

@@ -1,6 +1,6 @@
-# Onion WAZN Blockchain Explorer
+# WAZN Onion Blockchain Explorer
 
-Currently available blockchain explorers have several limitations which are of special importance to privacy-oriented users:
+Currently available blockchain explorers have several limitations which are of special importance to privacy oriented users:
 
  - they use JavaScript,
  - have images which might be used for [cookieless tracking](http://lucb1e.com/rp/cookielesscookies/),
@@ -11,7 +11,7 @@ Currently available blockchain explorers have several limitations which are of s
  - have limited JSON API.
 
 In this example, these limitations are addressed by development of
-an Onion WAZN Blockchain Explorer. The example not only shows how to use
+an WAZN Onion Blockchain Explorer. The example not only shows how to use
 WAZN C++ libraries, but also demonstrates how to use:
 
  - [crow](https://github.com/ipkn/crow) - C++ micro web framework
@@ -35,9 +35,9 @@ Alternative block explorers:
 - [http://chainradar.com](http://chainradar.com/wazn/blocks)
 
 
-## Onion WAZN Blockchain Explorer features
+## WAZN Onion Blockchain Explorer features
 
-The key features of the Onion WAZN Blockchain Explorer are:
+The key features of the WAZN Onion Blockchain Explorer are:
 
  - no cookies, no web analytics trackers, no images,
  - by default no JavaScript, but can be enabled for client side decoding and proving transactions,
@@ -70,9 +70,9 @@ sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound
 
 # go to home folder
 cd ~
-git clone --recursive -b release-v0.14 https://github.com/Project-WAZN/WAZN
+git clone --recursive -b release-v0.14 https://github.com/project-wazn/wazn
 
-cd WAZN/
+cd wazn/
 
 USE_SINGLE_BUILDDIR=1 make
 ```
@@ -85,14 +85,14 @@ Once the WAZN compiles, the explorer can be downloaded and compiled
 as follows:
 
 ```bash
-# go to home folder if still in ~/WAZN
+# go to home folder if still in ~/wazn
 cd ~
 
 # download the source code
-git clone https://github.com/Project-WAZN/WAZN.Explorer_onion
+git clone https://github.com/project-wazn/wazn-onion-explorer
 
 # enter the downloaded sourced code folder
-cd WAZN.Explorer_Onion
+cd wazn-onion-explorer
 
 # make a build folder and enter it
 mkdir build && cd build
@@ -100,7 +100,7 @@ mkdir build && cd build
 # create the makefile
 cmake ..
 
-# altearnatively can use: cmake -DMONERO_DIR=/path/to/wazn_folder ..
+# alternatively can use: cmake -DWAZN_DIR=/path/to/wazn_folder ..
 # if WAZN is not in ~/wazn
 #
 # also can build with ASAN (sanitizers), for example
@@ -116,20 +116,20 @@ To run it:
 ./waznblocks
 ```
 
-By default it will look for blockchain in its default location i.e., `~/WAZN/lmdb`.
+By default it will look for blockchain in its default location i.e., `~/wazn/lmdb`.
 You can use `-b` option if its in different location.
 
 For example:
 
 ```bash
-./waznblocks -b /home/mwo/non-defult-wazn-location/lmdb/
+./waznblocks -b /home/mwo/non-default-wazn-location/lmdb/
 ```
 
 Example output:
 
 ```bash
-[mwo@arch WAZN.Explorer_Onion]$ ./waznblocks
-2016-May-28 10:04:49.160280 Blockchain initialized. last block: 1056761, d0.h0.m12.s47 time ago, current difficulty: 1517857750
+[mwo@arch wazn-onion-explorer]$ ./waznblocks
+2016-May-28 10:04:49.160280 Blockchain initialized. last block: 24372, d0.h0.m12.s47 time ago, current difficulty: 101763414
 (2016-05-28 02:04:49) [INFO    ] Crow/0.1 server is running, local port 8081
 ```
 
@@ -138,7 +138,7 @@ Go to your browser: http://127.0.0.1:8081
 ## The explorer's command line options
 
 ```
-waznblocks, Onion WAZN Blockchain Explorer:
+waznblocks, WAZN Onion Blockchain Explorer:
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
   -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
@@ -194,10 +194,10 @@ Example usage, defined as bash aliases.
 
 ```bash
 # for mainnet explorer
-alias waznblocksmainnet='~/WAZN.Explorer_Onion/build/waznblocks    --port 8081 --testnet-url "http://139.162.32.245:8082" --enable-pusher --enable-emission-monitor'
+alias waznblocksmainnet='~/wazn-onion-explorer/build/waznblocks    --port 8081 --testnet-url "http://139.162.32.245:8082" --enable-pusher --enable-emission-monitor'
 
 # for testnet explorer
-alias waznblockstestnet='~/WAZN.Explorer_Onion/build/waznblocks -t --port 8082 --mainnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
+alias waznblockstestnet='~/wazn-onion-explorer/build/waznblocks -t --port 8082 --mainnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
 ```
 
 These are aliases similar to those used for http://139.162.32.245:8081/ and http://139.162.32.245:8082/, respectively.
