@@ -9,7 +9,7 @@
 
 #include "mstch/mstch.hpp"
 
-#include "monero_headers.h"
+#include "bittube_headers.h"
 
 #include "../gen/version.h"
 
@@ -40,6 +40,7 @@
 
 #define TMPL_DIR                    "./templates"
 #define TMPL_PARIALS_DIR            TMPL_DIR "/partials"
+#define TMPL_ROBOTO_FONT            TMPL_DIR "/css/roboto_font.css"
 #define TMPL_CSS_STYLES             TMPL_DIR "/css/style.css"
 #define TMPL_INDEX                  TMPL_DIR "/index.html"
 #define TMPL_INDEX2                 TMPL_DIR "/index2.html"
@@ -60,6 +61,12 @@
 #define TMPL_MY_CHECKRAWKEYIMGS     TMPL_DIR "/checkrawkeyimgs.html"
 #define TMPL_MY_RAWOUTPUTKEYS       TMPL_DIR "/rawoutputkeys.html"
 #define TMPL_MY_CHECKRAWOUTPUTKEYS  TMPL_DIR "/checkrawoutputkeys.html"
+
+#define TMPL_AIR_HTML    TMPL_DIR "/airtime.html"
+
+#define TMPL_CSS_STYLE          TMPL_DIR "/css/style.css"
+#define TMPL_CSS_ROBOTO_FONT    TMPL_DIR "/css/roboto_font.css"
+#define TMPL_JS_AIRTIME         TMPL_DIR "/js/airtime.js"
 
 #define JS_JQUERY   TMPL_DIR "/js/jquery.min.js"
 #define JS_CRC32    TMPL_DIR "/js/crc32.js"
@@ -115,7 +122,7 @@ struct HasSpanInGetOutputKeyT: std::false_type
 //partial specialization (myy be SFINAEed away)
 template <typename T>
 struct HasSpanInGetOutputKeyT<
-    T,
+    T, 
     VoidT<decltype(std::declval<T>()
             .get_output_key(
                 std::declval<const epee::span<const uint64_t>&>(),
@@ -127,7 +134,7 @@ struct HasSpanInGetOutputKeyT<
 
 // primary template;
 template<typename, typename = VoidT<>>
-struct OutputIndicesReturnVectOfVectT : std::false_type
+struct OutputIndicesReturnVectOfVectT : std::false_type 
 {};
 
 template<typename T>
@@ -137,7 +144,7 @@ struct OutputIndicesReturnVectOfVectT<
             .get_tx_amount_output_indices(
                 uint64_t{}, size_t{})
             .front().front())
-    >>: std::true_type
+    >>: std::true_type 
 {};
 
 // indect overload of hash for tx_info_cache::key
@@ -532,6 +539,11 @@ page(MicroCore* _mcore,
     template_file["tx_table_header"] = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
     template_file["tx_table_row"]    = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
 
+    template_file["airtime_html"] = xmreg::read(TMPL_AIR_HTML);
+    template_file["style.css"] = xmreg::read(TMPL_CSS_STYLE);
+    template_file["roboto_font.css"] = xmreg::read(TMPL_CSS_ROBOTO_FONT);
+    template_file["airtime.js"] = xmreg::read(TMPL_JS_AIRTIME);
+
     if (enable_js) {
         // JavaScript files
         template_file["jquery.min.js"]   = xmreg::read(JS_JQUERY);
@@ -592,6 +604,30 @@ page(MicroCore* _mcore,
 
 }
 
+string
+airtime()
+{
+    return template_file["airtime_html"];
+}
+
+string
+css_style()
+{
+    return template_file["style.css"];
+}
+
+string
+css_roboto_font()
+{
+    return template_file["roboto_font.css"];
+}
+
+string
+js_airtime()
+{
+    return template_file["airtime.js"];
+}
+
 /**
  * @brief show recent transactions and mempool
  * @param page_no block page to show
@@ -610,7 +646,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     {
         json j_info;
 
-        get_monero_network_info(j_info);
+        get_bittube_network_info(j_info);
 
         return j_info;
     });
@@ -931,11 +967,11 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     string hash_rate;
 
     if (current_network_info.hash_rate > 1e6)
-            hash_rate = fmt::format("{:0.3f} MH/s", current_network_info.hash_rate/1.0e6);
-        else if (current_network_info.hash_rate > 1e3)
-            hash_rate = fmt::format("{:0.3f} kH/s", current_network_info.hash_rate/1.0e3);
-        else
-            hash_rate = fmt::format("{:d} H/s", current_network_info.hash_rate);
+        hash_rate = fmt::format("{:0.3f} MH/s", current_network_info.hash_rate/1.0e6);
+    else if (current_network_info.hash_rate > 1e3)
+        hash_rate = fmt::format("{:0.3f} kH/s", current_network_info.hash_rate/1.0e3);
+    else
+        hash_rate = fmt::format("{:d} H/s", current_network_info.hash_rate);
 
     pair<string, string> network_info_age = get_age(local_copy_server_timestamp,
                                                     current_network_info.info_timestamp);
@@ -946,10 +982,12 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     {
         current_network_info.current = true;
     }
+    std::string fee_type = height >= 268000 ? "byte" : "kb";
 
     context["network_info"] = mstch::map {
             {"difficulty"        , current_network_info.difficulty},
             {"hash_rate"         , hash_rate},
+            {"fee_type"          , fee_type},
             {"fee_per_kb"        , print_money(current_network_info.fee_per_kb)},
             {"alt_blocks_no"     , current_network_info.alt_blocks_count},
             {"have_alt_block"    , (current_network_info.alt_blocks_count > 0)},
@@ -1100,8 +1138,10 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
                 {"timestamp"       , mempool_tx.timestamp_str},
                 {"age"             , age_str},
                 {"hash"            , pod_to_hex(mempool_tx.tx_hash)},
-                {"fee"             , mempool_tx.fee_micro_str},
-                {"payed_for_kB"    , mempool_tx.payed_for_kB_micro_str},
+                {"fee"             , mempool_tx.fee_str},
+                {"fee_micro"       , mempool_tx.fee_micro_str},
+                {"payed_for_kB"    , mempool_tx.payed_for_kB_str},
+                {"payed_for_kB_micro"    , mempool_tx.payed_for_kB_micro_str},
                 {"xmr_inputs"      , mempool_tx.xmr_inputs_str},
                 {"xmr_outputs"     , mempool_tx.xmr_outputs_str},
                 {"no_inputs"       , mempool_tx.no_inputs},
@@ -1292,7 +1332,7 @@ show_block(uint64_t _blk_height)
 
     string blk_pow_hash_str = pod_to_hex(get_block_longhash(blk, _blk_height));
     uint64_t blk_difficulty = core_storage->get_db().get_block_difficulty(_blk_height);
-    
+
     mstch::map context {
             {"testnet"              , testnet},
             {"stagenet"             , stagenet},
@@ -1412,7 +1452,7 @@ show_block(string _blk_hash)
 }
 
 string
-show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0, bool refresh_page = false)
+show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0)
 {
 
     // parse tx hash string to hash object
@@ -1627,9 +1667,7 @@ show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0, bool refresh_page
             {"testnet"          , this->testnet},
             {"stagenet"         , this->stagenet},
             {"show_cache_times" , show_cache_times},
-            {"txs"              , mstch::array{}},
-            {"refresh"          , refresh_page},
-            {"tx_hash"          , tx_hash_str}
+            {"txs"              , mstch::array{}}
     };
 
     boost::get<mstch::array>(context["txs"]).push_back(tx_context);
@@ -1738,7 +1776,7 @@ show_ringmembers_hex(string const& tx_hash_str)
 
        // make timescale maps for mixins in input
     for (txin_to_key const& in_key: input_key_imgs)
-    {
+    {      
         // get absolute offsets of mixins
         std::vector<uint64_t> absolute_offsets
                 = cryptonote::relative_output_offsets_to_absolute(
@@ -1931,7 +1969,7 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
 
     // add placeholder for sender and recipient details
     // this is most useful for unit testing on stagenet/testnet
-    // private monero networks, so we can easly put these
+    // private bittube networks, so we can easly put these
     // networks accounts details here.
     tx_json["sender"] = json {
                             {"seed", ""},
@@ -2155,7 +2193,7 @@ show_my_outputs(string tx_hash_str,
 
     if (xmr_address_str.empty())
     {
-        return string("Monero address not provided!");
+        return string("BitTube address not provided!");
     }
 
     if (viewkey_str.empty())
@@ -2175,7 +2213,7 @@ show_my_outputs(string tx_hash_str,
         return string("Cant get tx hash due to parse error: " + tx_hash_str);
     }
 
-    // parse string representing given monero address
+    // parse string representing given BitTube address
     cryptonote::address_parse_info address_info;
 
     if (!xmreg::parse_str_address(xmr_address_str,  address_info, nettype))
@@ -2333,7 +2371,7 @@ show_my_outputs(string tx_hash_str,
     string pid_str   = pod_to_hex(txd.payment_id);
     string pid8_str  = pod_to_hex(txd.payment_id8);
 
-    string shortcut_url = tx_prove
+    string shortcut_url = tx_prove 
                     ? string("/prove") : string("/myoutputs")
                           + '/' + tx_hash_str
                           + '/' + xmr_address_str
@@ -2379,7 +2417,7 @@ show_my_outputs(string tx_hash_str,
     // public transaction key is combined with our viewkey
     // to create, so called, derived key.
     key_derivation derivation;
-    std::vector<key_derivation> additional_derivations(txd.additional_pks.size());
+    std::vector<key_derivation> additional_derivations(txd.additional_pks.size());   
 
     if (tx_prove && multiple_tx_secret_keys.size()
             != txd.additional_pks.size() + 1)
@@ -2573,7 +2611,7 @@ show_my_outputs(string tx_hash_str,
             //core_storage->get_db().get_output_key(in_key.amount,
                                                   //absolute_offsets,
                                                   //mixin_outputs);
-
+            
             get_output_key<BlockchainDB>(in_key.amount,
                                            absolute_offsets,
                                            mixin_outputs);
@@ -2742,7 +2780,7 @@ show_my_outputs(string tx_hash_str,
 
                 txout_to_key const& txout_k      = std::get<0>(mix_out);
                 uint64_t amount           = std::get<1>(mix_out);
-                uint64_t output_idx_in_tx = std::get<2>(mix_out);
+                uint64_t output_idx_in_tx = std::get<2>(mix_out);             
 
                 //cout << " - " << pod_to_hex(txout_k.key) << endl;
 
@@ -2834,13 +2872,13 @@ show_my_outputs(string tx_hash_str,
                 if (mine_output)
                 {
                     found_something = true;
-                    show_key_images = true;
+                    show_key_images = true;                   
 
                     // increase sum_mixin_xmr only when
                     // public key of an outputs used in ring signature,
                     // matches a public key in a mixin_tx
                     if (txout_k.key != output_data.pubkey)
-                        continue;
+                        continue;              
 
                     // sum up only first output matched found in each input
                     if (no_of_output_matches_found == 0)
@@ -3296,7 +3334,7 @@ show_checkrawtx(string raw_tx_data, string action)
 
             // ok, so its not signed tx data. but maybe it is raw tx data
             // used in rpc call "/sendrawtransaction". This is for example
-            // used in mymonero and openmonero projects.
+            // used in mybittube and openbittube projects.
 
             // to check this, first we need to encode data back to base64.
             // the reason is that txs submited to "/sendrawtransaction"
@@ -3661,7 +3699,7 @@ show_pushrawtx(string raw_tx_data, string action)
         ptx_vector.push_back({});
         ptx_vector.back().tx = parsed_tx;
     }
-    // if failed, treat raw_tx_data as base64 encoding of signed_monero_tx
+    // if failed, treat raw_tx_data as base64 encoding of signed_bittube_tx
     else
     {
         string decoded_raw_tx_data = epee::string_encoding::base64_decode(raw_tx_data);
@@ -4315,11 +4353,11 @@ search(string search_text)
     result_html = default_txt;
 
 
-    // check if monero address is given based on its length
+    // check if BitTube address is given based on its length
     // if yes, then we can only show its public components
     if (search_str_length == 95)
     {
-        // parse string representing given monero address
+        // parse string representing given BitTube address
         address_parse_info address_info;
 
         cryptonote::network_type nettype_addr {cryptonote::network_type::MAINNET};
@@ -4339,7 +4377,7 @@ search(string search_text)
         return show_address_details(address_info, nettype_addr);
     }
 
-    // check if integrated monero address is given based on its length
+    // check if integrated BitTube address is given based on its length
     // if yes, then show its public components search tx based on encrypted id
     if (search_str_length == 106)
     {
@@ -4742,8 +4780,8 @@ json_transaction(string tx_hash_str)
                                                   //outputs);
 
             get_output_key<BlockchainDB>(in_key.amount,
-                                                  absolute_offsets,
-                                                  outputs);
+                                           absolute_offsets,
+                                           outputs);
         }
         catch (const OUTPUT_DNE &e)
         {
@@ -4864,7 +4902,7 @@ json_rawtransaction(string tx_hash_str)
         }
     }
 
-    // get raw tx json as in monero
+    // get raw tx json as in bittube
 
     try
     {
@@ -5152,7 +5190,7 @@ json_rawblock(string block_no_or_hash)
         return j_response;
     }
 
-    // get raw tx json as in monero
+    // get raw tx json as in bittube
 
     try
     {
@@ -5496,7 +5534,7 @@ json_outputs(string tx_hash_str,
     if (address_str.empty())
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Monero address not provided";
+        j_response["message"] = "BitTube address not provided";
         return j_response;
     }
 
@@ -5527,13 +5565,13 @@ json_outputs(string tx_hash_str,
         return j_response;
     }
 
-    // parse string representing given monero address
+    // parse string representing given BitTube address
     address_parse_info address_info;
 
     if (!xmreg::parse_str_address(address_str,  address_info, nettype))
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Cant parse monero address: " + address_str;
+        j_response["message"] = "Cant parse BitTube address: " + address_str;
         return j_response;
 
     }
@@ -5721,7 +5759,7 @@ json_outputsblocks(string _limit,
     if (address_str.empty())
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Monero address not provided";
+        j_response["message"] = "BitTube address not provided";
         return j_response;
     }
 
@@ -5732,13 +5770,13 @@ json_outputsblocks(string _limit,
         return j_response;
     }
 
-    // parse string representing given monero address
+    // parse string representing given BitTube address
     address_parse_info address_info;
 
     if (!xmreg::parse_str_address(address_str, address_info, nettype))
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Cant parse monero address: " + address_str;
+        j_response["message"] = "Cant parse BitTube address: " + address_str;
         return j_response;
 
     }
@@ -5884,10 +5922,10 @@ json_networkinfo()
     json j_info;
 
     // get basic network info
-    if (!get_monero_network_info(j_info))
+    if (!get_bittube_network_info(j_info))
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Cant get monero network info";
+        j_response["message"] = "Cant get bittube network info";
         return j_response;
     }
 
@@ -5976,7 +6014,7 @@ json_version()
             {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
             {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
             {"git_branch_name"     , string {GIT_BRANCH_NAME}},
-            {"wazn_version_full" , string {WAZN_VERSION_FULL}},
+            {"bittube_version_full" , string {BITTUBE_VERSION_FULL}},
             {"api"                 , ONIONEXPLORER_RPC_VERSION},
             {"blockchain_height"   , core_storage->get_current_blockchain_height()}
     };
@@ -6420,7 +6458,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
             //core_storage->get_db().get_output_key(in_key.amount,
                                                   //absolute_offsets,
                                                   //outputs);
-
+            
             get_output_key<BlockchainDB>(in_key.amount,
                                            absolute_offsets,
                                            outputs);
@@ -6633,11 +6671,11 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
         if (core_storage->get_db().tx_exists(txd.hash, tx_index))
         {
-          //out_amount_indices = core_storage->get_db()
-                  //.get_tx_amount_output_indices(tx_index).front();
-          get_tx_amount_output_indices<BlockchainDB>(
-                 out_amount_indices,
-                 tx_index);
+            //out_amount_indices = core_storage->get_db()
+                    //.get_tx_amount_output_indices(tx_index).front();
+            get_tx_amount_output_indices<BlockchainDB>(
+                   out_amount_indices, 
+                   tx_index);
         }
         else
         {
@@ -6979,7 +7017,7 @@ get_full_page(const string& middle)
 }
 
 bool
-get_monero_network_info(json& j_info)
+get_bittube_network_info(json& j_info)
 {
     MempoolStatus::network_info local_copy_network_info
         = MempoolStatus::current_network_info;
@@ -7074,7 +7112,7 @@ get_footer()
             {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
             {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
             {"git_branch_name"     , string {GIT_BRANCH_NAME}},
-            {"wazn_version_full" , string {WAZN_VERSION_FULL}},
+            {"bittube_version_full" , string {BITTUBE_VERSION_FULL}},
             {"api"                 , std::to_string(ONIONEXPLORER_RPC_VERSION_MAJOR)
                                      + "."
                                      + std::to_string(ONIONEXPLORER_RPC_VERSION_MINOR)},
@@ -7147,7 +7185,7 @@ typename std::enable_if<
 get_output_key(uint64_t amount, Args&&... args)
 {
   core_storage->get_db().get_output_key(
-          epee::span<const uint64_t>(&amount, 1),
+          epee::span<const uint64_t>(&amount, 1), 
           std::forward<Args>(args)...);
 }
 
@@ -7182,3 +7220,4 @@ get_tx_amount_output_indices(vector<uint64_t>& out_amount_indices, Args&&... arg
 }
 
 #endif //CROWXMR_PAGE_H
+

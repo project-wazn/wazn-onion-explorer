@@ -31,8 +31,8 @@
             <td>No of txs:</td><td>{{no_txs}}</td>
         </tr>
         <tr>
-          <td>PoW Hash:</td><td>{{blk_pow_hash}}</td>
-          <td>Difficulty:</td><td>{{blk_difficulty}}</td>
+            <td>PoW hash:</td><td>{{blk_pow_hash}}</td>
+            <td>Difficulty:</td><td>{{blk_difficulty}}</td>
             <td></td>
         </tr>
     </table>
@@ -64,7 +64,7 @@
             <tr>
                 <td>hash</td>
                 <td>outputs</td>
-                <td>fee [&#181;&#x271]</td>
+                <td>fee</td>
                 <td>in/out</td>
                 <td>size [kB]</td>
                 <td>version</td>
@@ -73,14 +73,14 @@
                 <tr>
                     <td><a href="/tx/{{hash}}">{{hash}}</a></td>
                     <td>{{sum_outputs}}</td>
-                    <td>{{fee_micro}}</td>
-                    <td>{{no_inputs}}/{{no_outputs}}</td>
+                    <td>{{tx_fee}}</td>
+                    <td>{{no_inputs}}/{{no_outputs}}</td>                    
                     <td>{{tx_size}}</td>
                     <td>{{version}}</td>
                 </tr>
             {{/blk_txs}}
         </table>
-    {{/have_txs}}
+    {{/have_txs}}    
 
 
     {{#enable_as_hex}}

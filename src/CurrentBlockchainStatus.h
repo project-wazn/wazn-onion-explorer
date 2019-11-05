@@ -2,8 +2,8 @@
 // Created by mwo on 16/05/17.
 //
 
-#ifndef WAZNBLOCKS_CURRENTBLOCKCHAINSTATUS_H
-#define WAZNBLOCKS_CURRENTBLOCKCHAINSTATUS_H
+#ifndef XMRBLOCKS_CURRENTBLOCKCHAINSTATUS_H
+#define XMRBLOCKS_CURRENTBLOCKCHAINSTATUS_H
 
 #include "MicroCore.h"
 
@@ -51,7 +51,7 @@ struct CurrentBlockchainStatus
 
     static string output_file;
 
-    static string deamon_url;
+    static string daemon_url;
 
     // how many blocks to read before thread goes to sleep
     static uint64_t blockchain_chunk_size;
@@ -111,4 +111,4 @@ struct CurrentBlockchainStatus
 
 }
 
-#endif //WAZNBLOCKS_CURRENTBLOCKCHAINSTATUS_H
+#endif //XMRBLOCKS_CURRENTBLOCKCHAINSTATUS_H

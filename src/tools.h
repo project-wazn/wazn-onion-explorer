@@ -8,14 +8,14 @@
 #define PATH_SEPARARTOR '/'
 
 #define XMR_AMOUNT(value) \
-    static_cast<double>(value) / 1e12
+    static_cast<double>(value) / 1e8
 
 #define REMOVE_HASH_BRAKETS(a_hash) \
     a_hash.substr(1, a_hash.size()-2)
 
 
 
-#include "monero_headers.h"
+#include "bittube_headers.h"
 
 #include "../ext/fmt/ostream.h"
 #include "../ext/fmt/format.h"
@@ -224,7 +224,7 @@ get_payment_id(const transaction& tx,
 inline double
 get_xmr(uint64_t core_amount)
 {
-    return  static_cast<double>(core_amount) / 1e12;
+    return  static_cast<double>(core_amount) / 1e8;
 }
 
 array<size_t, 5>
@@ -274,7 +274,7 @@ get_tx_pub_key_from_received_outs(const transaction &tx);
 static
 string
 xmr_amount_to_str(const uint64_t& xmr_amount,
-                  string _format="{:0.12f}",
+                  string _format="{:0.8f}",
                   bool zero_to_question_mark=true)
 {
     string amount_str = "?";
@@ -331,7 +331,7 @@ void chunks(Iterator begin,
     }
     while(std::distance(chunk_begin,end) > 0);
 }
-
+    
 /*
  * Remove all characters in in_str that match the given
  * regular expression
