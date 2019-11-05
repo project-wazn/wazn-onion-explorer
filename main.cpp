@@ -884,27 +884,6 @@ main(int ac, const char* av[])
         });
     }
 
-    CROW_ROUTE(app, "/airtime").methods("GET"_method)
-    ([&]() {
-        return waznblocks.airtime();
-    });
-    CROW_ROUTE(app, "/airtime.html").methods("GET"_method)
-    ([&]() {
-        return waznblocks.airtime();
-    });
-    CROW_ROUTE(app, "/css/style.css").methods("GET"_method)
-    ([&]() {
-        return waznblocks.css_style();
-    });
-    CROW_ROUTE(app, "/css/roboto_font.css").methods("GET"_method)
-    ([&]() {
-        return waznblocks.css_roboto_font();
-    });
-    CROW_ROUTE(app, "/js/airtime.js").methods("GET"_method)
-    ([&]() {
-        return waznblocks.js_airtime();
-    });
-
     // run the crow http server
 
     if (use_ssl)
