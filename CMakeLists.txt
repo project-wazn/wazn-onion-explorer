@@ -31,7 +31,7 @@ if (NOT WAZN_BUILD_DIR)
 endif()
 
 set(MY_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake"
-        CACHE PATH "The path to the cmake directory of the current project")
+        CACHE PATH "The path to the Cmake directory of the current project")
 
 list(APPEND CMAKE_MODULE_PATH "${MY_CMAKE_DIR}")
 
