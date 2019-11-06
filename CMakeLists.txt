@@ -20,7 +20,7 @@ endif()
 message(STATUS WAZN_DIR ": ${WAZN_DIR}")
 
 if (NOT WAZN_SOURCE_DIR)
-    set(WAZN_SOURCE_DIR ${WAZN}
+    set(WAZN_SOURCE_DIR ${WAZN_DIR}
             CACHE PATH "Path to the root directory for WAZN")
 endif()
 
