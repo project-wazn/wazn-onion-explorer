@@ -156,7 +156,7 @@ MicroCore::get_tx(const string& tx_hash_str, transaction& tx)
     // parse tx hash string to hash object
     crypto::hash tx_hash;
 
-    if (!wazneg:parse_str_secret_key(tx_hash_str, tx_hash))
+    if (!wazneg::parse_str_secret_key(tx_hash_str, tx_hash))
     {
         cerr << "Cant parse tx hash: " << tx_hash_str << endl;
         return false;

@@ -266,7 +266,7 @@ get_blockchain_path(const boost::optional<string>& bc_path,
                     cryptonote::network_type nettype)
 {
     // the default folder of the lmdb blockchain database
-    string default_lmdb_dir   = wazneg:get_default_lmdb_folder(nettype);
+    string default_lmdb_dir   = wazneg::get_default_lmdb_folder(nettype);
 
     blockchain_path = bc_path
                       ? bf::path(*bc_path)
@@ -281,7 +281,7 @@ get_blockchain_path(const boost::optional<string>& bc_path,
         return false;
     }
 
-    blockchain_path = wazneg:remove_trailing_path_separator(blockchain_path);
+    blockchain_path = wazneg::remove_trailing_path_separator(blockchain_path);
 
     return true;
 }

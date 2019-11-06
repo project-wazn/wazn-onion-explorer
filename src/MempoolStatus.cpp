@@ -190,13 +190,13 @@ MempoolStatus::read_mempool()
         last_tx.mixin_no          = sum_data[2];
         last_tx.num_nonrct_inputs = sum_data[3];
 
-        last_tx.fee_str          = wazneg:wazn_amount_to_str(_tx_info.fee, "{:0.4f}", false);
-        last_tx.fee_micro_str    = wazneg:wazn_amount_to_str(_tx_info.fee*1.0e6, "{:04.0f}", false);
+        last_tx.fee_str          = wazneg::wazn_amount_to_str(_tx_info.fee, "{:0.4f}", false);
+        last_tx.fee_micro_str    = wazneg::wazn_amount_to_str(_tx_info.fee*1.0e6, "{:04.0f}", false);
         last_tx.payed_for_kB_str = fmt::format("{:0.4f}", payed_for_kB);
         last_tx.payed_for_kB_micro_str = fmt::format("{:04.0f}", payed_for_kB*1e6);
-        last_tx.wazn_inputs_str   = wazneg:wazn_amount_to_str(last_tx.sum_inputs , "{:0.3f}");
-        last_tx.wazn_outputs_str  = wazneg:wazn_amount_to_str(last_tx.sum_outputs, "{:0.3f}");
-        last_tx.timestamp_str    = wazneg:timestamp_to_str_gm(_tx_info.receive_time);
+        last_tx.wazn_inputs_str   = wazneg::wazn_amount_to_str(last_tx.sum_inputs , "{:0.3f}");
+        last_tx.wazn_outputs_str  = wazneg::wazn_amount_to_str(last_tx.sum_outputs, "{:0.3f}");
+        last_tx.timestamp_str    = wazneg::timestamp_to_str_gm(_tx_info.receive_time);
 
         last_tx.txsize           = fmt::format("{:0.2f}", tx_size);
 
@@ -347,7 +347,7 @@ cryptonote::network_type MempoolStatus::nettype {cryptonote::network_type::MAINN
 atomic<bool>       MempoolStatus::is_running {false};
 boost::thread      MempoolStatus::m_thread;
 Blockchain*        MempoolStatus::core_storage {nullptr};
-wazneg:MicroCore*  MempoolStatus::mcore {nullptr};
+wazneg::MicroCore*  MempoolStatus::mcore {nullptr};
 vector<MempoolStatus::mempool_tx> MempoolStatus::mempool_txs;
 atomic<MempoolStatus::network_info> MempoolStatus::current_network_info;
 atomic<uint64_t> MempoolStatus::mempool_no {0};   // no of txs
