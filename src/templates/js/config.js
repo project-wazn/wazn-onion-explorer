@@ -17,7 +17,7 @@ var config = {
     addressPrefixStagenet: 0xd1,
     integratedAddressPrefixStagenet: 0x404f,
     subAddressPrefixStagenet: 0x3750,
-    feePerKB: new JSBigInt('100000'),//20^10 - for testnet its not used, as fee is dynamic.
+    feePerKB: new JSBigInt('20000'),//20^10 - for testnet its not used, as fee is dynamic.
     dustThreshold: new JSBigInt('10000'),//10^10 used for choosing outputs/change - we decompose all the way down if the receiver wants now regardless of threshold
     txChargeRatio: 0.5,
     defaultMixin: 6, // minimum mixin for hardfork v9
