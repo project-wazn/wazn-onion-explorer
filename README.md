@@ -20,19 +20,13 @@ WAZN C++ libraries, but also demonstrates how to use:
  - [fmt](https://github.com/fmtlib/fmt) - Small, safe and fast string formatting library
 
 ## Explorer hosts
-Tor users:
-
-Clearnet versions:
-
-Testnet version:
-
-Stagenet version:
+[explorer.wazn.io](http://explorer.wazn.io)
 
 Alternative block explorers:
 
-- [http://moneroblocks.info](http://moneroblocks.info/)
-- [https://monerovision.com](https://monerovision.com)
-- [http://chainradar.com](http://chainradar.com/wazn/blocks)
+- [moneroblocks.info](http://moneroblocks.info/)
+- [monerovision.com](https://monerovision.com)
+- [chainradar.com](http://chainradar.com/wazn/blocks)
 
 
 ## WAZN Onion Blockchain Explorer features
