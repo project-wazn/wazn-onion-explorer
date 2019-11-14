@@ -129,7 +129,7 @@ td {
 }
 
 td>a {
-  color: # !important;
+  color: #006633;
 }
 
 td>a:hover {
@@ -138,7 +138,7 @@ td>a:hover {
 
 a,
 .clickAbleSpan {
-  color: # !important;
+  color: #339933;
 }
 
 .clickAbleSpan {
@@ -335,7 +335,7 @@ input {
 }
 
 .buttonSearch {
-  background-color: #006633;
+  background-color: #339933;
   border: none;
   height: 35px;
   outline: none;
@@ -375,7 +375,7 @@ input {
   word-wrap: normal;
   white-space: nowrap;
   direction: ltr;
-  color: #999;
+  color: #ffffff;
   /* Support for all WebKit browsers. */
   -webkit-font-smoothing: antialiased;
   /* Support for Safari and Chrome. */
@@ -414,7 +414,7 @@ input {
 .roseButton {
   margin-top: 10px;
   margin-bottom: 10px;
-  background-color: ff9900;
+  background-color: #339933;
   color: #fff;
   border: none;
   padding: 10px;
