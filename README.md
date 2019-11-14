@@ -20,7 +20,8 @@ WAZN C++ libraries, but also demonstrates how to use:
  - [fmt](https://github.com/fmtlib/fmt) - Small, safe and fast string formatting library
 
 ## Explorer hosts
-[explorer.wazn.io](http://explorer.wazn.io)
+- [explorer.wazn.io](http://explorer.wazn.io)
+- [vermin](http://45.32.157.118:8081)
 
 Alternative block explorers:
 
@@ -64,14 +65,14 @@ sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound
 
 # go to home folder
 cd ~
-git clone --recursive -b release-v0.14 https://github.com/project-wazn/wazn
+git clone --recursive https://github.com/project-wazn/wazn
 
 cd wazn/
 
-USE_SINGLE_BUILDDIR=1 make
+USE_SINGLE_BUILDDIR=1 make release
 ```
 
-```bash
+```
 
 ##### Compile and run the explorer
 
