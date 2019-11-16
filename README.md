@@ -21,7 +21,6 @@ WAZN C++ libraries, but also demonstrates how to use:
 
 ## Explorer hosts
 - [explorer.wazn.io](http://explorer.wazn.io)
-- [vermin](http://45.32.157.118:8081)
 
 Alternative block explorers:
 
