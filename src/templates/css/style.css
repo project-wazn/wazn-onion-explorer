@@ -84,7 +84,7 @@ body {
   padding: 0;
   color: #3c4858;
   /*background-color: black;*/
-  background-color: #eee;
+  background-color: #f8f9fa;
   font-family: Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -129,7 +129,7 @@ td {
 }
 
 td>a {
-  color: #339933;
+  color: #006633;
 }
 
 td>a:hover {
@@ -138,7 +138,7 @@ td>a:hover {
 
 a,
 .clickAbleSpan {
-  color: #339933;
+  color: #ff9900;
 }
 
 .clickAbleSpan {
@@ -272,7 +272,7 @@ input#toggle-1[type=checkbox]:checked~div#decoded-inputs {
   position: fixed;
   top: 0px;
   height: 56px;
-  background-color: white;
+  background-color: #f8f9fa;
   width: 100%;
   padding-left: 20px;
   padding-right: 20px;
@@ -325,7 +325,7 @@ input {
   margin-top: 8px;
   width: calc(50% - 56px);
   border: none !important;
-  border-bottom: 1px solid #dcdcdc !important;
+  border-bottom: 1px solid #c1c1c1 !important;
   outline: none;
   box-shadow: none;
 }
@@ -337,6 +337,7 @@ input {
 .buttonSearch {
   background-color: #339933;
   border: none;
+  border-bottom: 1px solid #dcdcdc !important;
   height: 35px;
   outline: none;
   line-height: 1px;
@@ -396,7 +397,7 @@ input {
   line-height: 1.42857143;
   display: inline-block;
   width: 500px;
-  vertical-align: middle;
+  vertical-align: bottom;
 }
 
 .searchCenter {
@@ -412,7 +413,7 @@ input {
 }
 
 .roseButton {
-  margin-top: 10px;
+  margin-top: 20px;
   margin-bottom: 10px;
   background-color: #339933;
   color: #fff;

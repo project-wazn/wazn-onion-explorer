@@ -326,7 +326,7 @@
 
                     if (mine_output) {
 
-                        mine_output_str = '<span style="color: #008009;font-weight: bold">true</span>';
+                        mine_output_str = '<span style="color: #006633;font-weight: bold">true</span>';
 
                         if (is_rct && rct_type > 0 /* not coinbase*/) {
                             try {
@@ -458,7 +458,7 @@
                       <td> - {{mix_idx}}: <a href="/tx/{{mix_tx_hash}}">{{mix_pub_key}}</a></td>
                       {{#have_raw_tx}}
                         {{#mix_is_it_real}}
-                            <td><span style="color: #008009;font-weight: bold">{{mix_is_it_real}}</span></td>
+                            <td><span style="color: #006633;font-weight: bold">{{mix_is_it_real}}</span></td>
                         {{/mix_is_it_real}}
                         {{^mix_is_it_real}}
                             <td>{{mix_is_it_real}}</td>
@@ -487,7 +487,7 @@
                         <td> - {{mix_idx}}: {{mix_pub_key}}</td>
                         {{#have_raw_tx}}
                             {{#mix_is_it_real}}
-                                <td><span style="color: #008009;font-weight: bold">{{mix_is_it_real}}</span></td>
+                                <td><span style="color: #006633;font-weight: bold">{{mix_is_it_real}}</span></td>
                             {{/mix_is_it_real}}
                             {{^mix_is_it_real}}
                                 <td>{{mix_is_it_real}}</td>
