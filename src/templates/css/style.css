@@ -43,7 +43,7 @@ h1 {
 }
 
 .card__header {
-    background: #006633;
+    background: #339933;
     color: white;
     font-weight: bold;
     padding: 10px 15px;
@@ -109,7 +109,7 @@ a:visited {
 
 a:hover {
     text-decoration: underline;
-    color: #339933;
+    color: #006633;
 }
 
 a:active {
@@ -265,7 +265,7 @@ p {
 .layout {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    min-height: 10vh;
 }
 
 .layout__header {}
@@ -311,9 +311,9 @@ p {
     margin: 0 auto 0;
     width: 100%;
     max-width: 920px;
-    padding: 30px;
+    padding: 5px;
     display: flex;
-}
+
 
 .footer__title {
     color: rgba(34,48,66,0.9);
