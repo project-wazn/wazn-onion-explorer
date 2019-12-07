@@ -1,37 +1,22 @@
 
 <div>
     <br/>
-    <H4 style="margin:5px">Address:<br/>{{wazn_address}}</H4>
+    <p>Address:<br/> <span class="inline-code">{{wazn_address}}</span></p>
     <br/>
 
-    {{#testnet}}
-        <H4 style="margin:5px">Network type: Testnet</H4>
-    {{/testnet}}
-    {{#stagenet}}
-        <H4 style="margin:5px">Network type: Stagenet</H4>
-    {{/stagenet}}
-    {{^testnet}}{{^stagenet}}
-        <H4 style="margin:5px">Network type: Mainnet</H4>
-    {{/stagenet}}{{/testnet}}
+    <p>Associated public keys</p>
 
-    <br/>
-    <H4 style="margin:5px">Associated public keys</H4>
-
-    <H4 style="margin:5px">View key: {{public_viewkey}}</H4>
-    <H4 style="margin:5px">Spend key: {{public_spendkey}}</H4>
+    <p>View key: <span class="inline-code">{{public_viewkey}}</span></p>
+    <p>Spend key: <span class="inline-code">{{public_spendkey}}</span></p>
     <br/>
 
     {{#is_integrated_addr}}
-        <H4 style="margin:5px">Payment id: {{encrypted_payment_id}}</H4>
+        <p>Payment id: <span class="inline-code">{{encrypted_payment_id}}</span></p>
     {{/is_integrated_addr}}
 
-
-    <H4 style="margin:5px">
+    <p>
         Transactions:<br/> Sorry, its not possible to find txs associated with
         normal addresses in WAZN
-    </H4>
-
-    <br/>
-
+    </p>
 </div>
 <br/>
