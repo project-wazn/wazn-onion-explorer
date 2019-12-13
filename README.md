@@ -22,15 +22,10 @@ WAZN C++ libraries, but also demonstrates how to use:
  - [json](https://github.com/nlohmann/json) - JSON for Modern C++
  - [fmt](https://github.com/fmtlib/fmt) - Small, safe and fast string formatting library
 
-## Explorer hosts
-- [explorer.wazn.io](http://explorer.wazn.io)
+## Onion Explorer hosts
+- [explorer.wazn.io](https://explorer.wazn.io)
 
 Alternative block explorers:
-
-- [moneroblocks.info](http://moneroblocks.info/)
-- [monerovision.com](https://monerovision.com)
-- [chainradar.com](http://chainradar.com/wazn/blocks)
-
 
 ## WAZN Onion Blockchain Explorer features
 
@@ -57,7 +52,7 @@ The key features of the WAZN Onion Blockchain Explorer are:
 
 ## Compilation on Ubuntu 16.04/18.04
 
-##### Compile latest WAZN version (v1.0.0) on Ubuntu 18.04
+##### Compile latest WAZN version (v1.1.0) on Ubuntu 18.04
 
 ```bash
 # first install WAZN dependecines

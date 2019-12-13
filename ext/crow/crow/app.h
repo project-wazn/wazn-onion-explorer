@@ -144,7 +144,7 @@ namespace crow
         self_t& ssl_file(const std::string& crt_filename, const std::string& key_filename)
         {
             use_ssl_ = true;
-            ssl_context_.set_verify_mode(boost::asio::ssl::verify_peer);
+            ssl_context_.set_verify_mode(boost::asio::ssl::verify_none);
             ssl_context_.use_certificate_file(crt_filename, ssl_context_t::pem);
             ssl_context_.use_private_key_file(key_filename, ssl_context_t::pem);
             ssl_context_.set_options(
@@ -158,7 +158,7 @@ namespace crow
         self_t& ssl_file(const std::string& pem_filename)
         {
             use_ssl_ = true;
-            ssl_context_.set_verify_mode(boost::asio::ssl::verify_peer);
+            ssl_context_.set_verify_mode(boost::asio::ssl::verify_none);
             ssl_context_.load_verify_file(pem_filename);
             ssl_context_.set_options(
                     boost::asio::ssl::context::default_workarounds
