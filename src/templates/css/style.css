@@ -313,6 +313,7 @@ p {
     max-width: 920px;
     padding: 5px;
     display: flex;
+}
 
 .footer__title {
     color: rgba(34,48,66,0.9);
