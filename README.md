@@ -25,7 +25,7 @@ WAZN C++ libraries, but also demonstrates how to use:
 ## Onion Explorer hosts
 - [explorer.wazn.io](https://explorer.wazn.io)
 
-<img src="https://wazn.io/downloads/img/explorer1.jpg">
+<img src="https://wazn.io/downloads/img/explorer2.jpg">
 
 ## WAZN Onion Blockchain Explorer features
 
