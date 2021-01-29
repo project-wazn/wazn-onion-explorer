@@ -50,9 +50,9 @@ The key features of the WAZN Onion Blockchain Explorer are:
  - decoding encrypted payment id,
  - decoding outputs and proving txs sent to sub-address.
 
-## Compilation on Ubuntu 16.04/18.04
+## Compilation on Ubuntu 18.04 and 20.04
 
-##### Compile latest WAZN version (v1.1.0) on Ubuntu 18.04
+##### Compile latest WAZN version (v1.4.0) on Ubuntu 20.04
 
 ```bash
 # first install WAZN dependecines
@@ -178,21 +178,20 @@ waznblocks, WAZN Onion Blockchain Explorer:
                                         functionality
   --ssl-key-file arg                    path to key file for ssl (https)
                                         functionality
-  -d [ --deamon-url ] arg (=http:://127.0.0.1:18081)
-                                        WAZN deamon url
+  -d [ --deamon-url ] arg (=http:://127.0.0.1:11787) WAZN deamon url
 ```
 
 Example usage, defined as bash aliases.
 
 ```bash
 # for mainnet explorer
-alias waznblocksmainnet='~/wazn-onion-explorer/build/waznblocks    --port 8081 --testnet-url "http://139.162.32.245:8082" --enable-pusher --enable-emission-monitor'
+alias waznblocksmainnet='~/wazn-onion-explorer/build/waznblocks    --port 8081 --testnet-url "http://168.119.189.236:8082" --enable-pusher --enable-emission-monitor'
 
 # for testnet explorer
-alias waznblockstestnet='~/wazn-onion-explorer/build/waznblocks -t --port 8082 --mainnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
+alias waznblockstestnet='~/wazn-onion-explorer/build/waznblocks -t --port 8082 --mainnet-url "http://168.119.189.236:8081" --enable-pusher --enable-emission-monitor'
 ```
 
-These are aliases similar to those used for http://139.162.32.245:8081/ and http://139.162.32.245:8082/, respectively.
+These are aliases similar to those used for http://168.119.189.236:8081/ and http://168.119.189.236:8082/, respectively.
 
 ## Enable WAZN emission
 
@@ -261,6 +260,6 @@ By default the api is disabled. To enable it, use `--enable-json-api` flag, e.g.
 ## License
 ```
 Licensed under the EUPL-1.2
-Copyright (c) 2019 WAZN Project  
+Copyright (c) 2019-2021 WAZN Project  
 Copyright (c) 2016-2018 moneroexamples
 ```
