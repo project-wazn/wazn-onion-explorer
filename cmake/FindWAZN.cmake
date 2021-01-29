@@ -70,7 +70,7 @@ endif()
 
 message(STATUS ${WAZN_SOURCE_DIR}/build)
 
-# include WAZN headers
+# include Wazn headers
 include_directories(
 		${WAZN_SOURCE_DIR}/src
     ${WAZN_SOURCE_DIR}/src/crypto

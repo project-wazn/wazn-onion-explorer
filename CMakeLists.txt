@@ -25,13 +25,13 @@ if (NOT WAZN_SOURCE_DIR)
 endif()
 
 if (NOT WAZN_BUILD_DIR)
-    # set location of wazn build tree
+    # set location of Wazn build tree
     set(WAZN_BUILD_DIR ${WAZN_SOURCE_DIR}/build/release/
           CACHE PATH "Path to the build directory for Wazn")
 
    if (NOT EXISTS ${WAZN_BUILD_DIR})
         # try different location
-        message(STATUS "Trying different folder for wazn libraries")
+        message(STATUS "Trying different folder for Wazn libraries")
         set(WAZN_BUILD_DIR ${WAZN_SOURCE_DIR}/build/Linux/master/release/
             CACHE PATH "Path to the build directory for Wazn" FORCE)
     endif()
@@ -76,7 +76,7 @@ if(APPLE)
     link_directories(/usr/local/lib)
 endif()
 
-MESSAGE(STATUS "Looking for libunbound") # FindUnbound.cmake from wazn repo
+MESSAGE(STATUS "Looking for libunbound") # FindUnbound.cmake from Wazn repo
 
 FIND_PATH(UNBOUND_INCLUDE_DIR
   NAMES unbound.h
