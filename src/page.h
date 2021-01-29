@@ -10,6 +10,13 @@
 #include "mstch/mstch.hpp"
 
 #include "wazn_headers.h"
+#include "randomx.h"
+#include "common.hpp"
+#include "blake2/blake2.h"
+#include "virtual_machine.hpp"
+#include "program.hpp"
+#include "aes_hash.hpp"
+#include "assembly_generator_x86.hpp"
 
 #include "../gen/version.h"
 
@@ -24,12 +31,18 @@
 
 #include "../ext/json.hpp"
 
-#include "../ext/vpetrigocaches/cache.hpp"
-#include "../ext/vpetrigocaches/lru_cache_policy.hpp"
-#include "../ext/vpetrigocaches/fifo_cache_policy.hpp"
 #include "../ext/mstch/src/visitor/render_node.hpp"
 
+extern "C" uint64_t me_rx_seedheight(const uint64_t height);
 
+// forked version of the rx_slow_hash from wazn
+extern "C" void me_rx_slow_hash(const uint64_t mainheight, const uint64_t seedheight,
+                             const char *seedhash,
+                             const void *data, size_t length,
+                             char *hash, int miners, int is_alt);
+//extern "C" void me_rx_reorg(const uint64_t split_height);
+
+extern  __thread randomx_vm *rx_vm;
 
 #include <algorithm>
 #include <limits>
@@ -40,7 +53,6 @@
 
 #define TMPL_DIR                    "./templates"
 #define TMPL_PARIALS_DIR            TMPL_DIR "/partials"
-#define TMPL_ROBOTO_FONT            TMPL_DIR "/css/roboto_font.css"
 #define TMPL_CSS_STYLES             TMPL_DIR "/css/style.css"
 #define TMPL_INDEX                  TMPL_DIR "/index.html"
 #define TMPL_INDEX2                 TMPL_DIR "/index2.html"
@@ -50,6 +62,7 @@
 #define TMPL_HEADER                 TMPL_DIR "/header.html"
 #define TMPL_FOOTER                 TMPL_DIR "/footer.html"
 #define TMPL_BLOCK                  TMPL_DIR "/block.html"
+#define TMPL_RANDOMX                TMPL_DIR "/randomx.html"
 #define TMPL_TX                     TMPL_DIR "/tx.html"
 #define TMPL_ADDRESS                TMPL_DIR "/address.html"
 #define TMPL_MY_OUTPUTS             TMPL_DIR "/my_outputs.html"
@@ -62,47 +75,12 @@
 #define TMPL_MY_RAWOUTPUTKEYS       TMPL_DIR "/rawoutputkeys.html"
 #define TMPL_MY_CHECKRAWOUTPUTKEYS  TMPL_DIR "/checkrawoutputkeys.html"
 
-#define JS_JQUERY   TMPL_DIR "/js/jquery.min.js"
-#define JS_CRC32    TMPL_DIR "/js/crc32.js"
-#define JS_BIGINT   TMPL_DIR "/js/biginteger.js"
-#define JS_CONFIG   TMPL_DIR "/js/config.js"
-#define JS_BASE58   TMPL_DIR "/js/base58.js"
-#define JS_CRYPTO   TMPL_DIR "/js/crypto.js"
-#define JS_CNUTIL   TMPL_DIR "/js/cn_util.js"
-#define JS_NACLFAST TMPL_DIR "/js/nacl-fast-cn.js"
-#define JS_SHA3     TMPL_DIR "/js/sha3.js"
-
 #define ONIONEXPLORER_RPC_VERSION_MAJOR 1
 #define ONIONEXPLORER_RPC_VERSION_MINOR 1
 #define MAKE_ONIONEXPLORER_RPC_VERSION(major,minor) (((major)<<16)|(minor))
 #define ONIONEXPLORER_RPC_VERSION \
     MAKE_ONIONEXPLORER_RPC_VERSION(ONIONEXPLORER_RPC_VERSION_MAJOR, ONIONEXPLORER_RPC_VERSION_MINOR)
 
-
-// basic info about tx to be stored in cashe.
-// we need to store block_no and timestamp,
-// as this time and number of confirmation needs
-// to be updated between requests. Just cant
-// get it from cash, as it will be old very soon
-struct tx_info_cache
-{
-    uint64_t   block_no;
-    uint64_t   timestamp;
-    mstch::map tx_map;
-
-    // custom key for use in cache.
-    // cache uses unordeded map for keys
-    struct key
-    {
-        crypto::hash tx_hash;
-        bool detailed;
-
-        bool operator==(const key &other) const
-        {
-            return (tx_hash == other.tx_hash && detailed == other.detailed);
-        }
-    };
-};
 
 
 // helper to ignore any number of template parametrs
@@ -140,22 +118,6 @@ struct OutputIndicesReturnVectOfVectT<
             .front().front())
     >>: std::true_type
 {};
-
-// indect overload of hash for tx_info_cache::key
-namespace std
-{
-    template<>
-    struct hash<tx_info_cache::key>
-    {
-        size_t operator()(const tx_info_cache::key& k) const
-        {
-            size_t const h1 ( std::hash<crypto::hash>{}(k.tx_hash) );
-            size_t const h2 ( std::hash<bool>{}(k.detailed) );
-            return h1 ^ (h2 << 1);
-        };
-    };
-}
-
 
 
 /**
@@ -233,6 +195,111 @@ using namespace std;
 using epee::string_tools::pod_to_hex;
 using epee::string_tools::hex_to_pod;
 
+template< typename T >
+std::string as_hex(T i)
+{
+  std::stringstream ss;
+
+  ss << "0x" << setfill ('0') << setw(sizeof(T)*2)
+         << hex << i;
+  return ss.str();
+}
+
+struct randomx_status
+{
+    randomx::Program prog;
+    randomx::RegisterFile reg_file;
+
+    randomx::AssemblyGeneratorX86
+    get_asm()
+    {
+        randomx::AssemblyGeneratorX86 asmX86;
+        asmX86.generateProgram(prog);
+    	return asmX86;
+    }
+
+    mstch::map
+    get_mstch()
+    {
+        auto asmx86 = get_asm();
+
+        stringstream ss1, ss2;
+
+        ss1 << prog;
+        asmx86.printCode(ss2);
+
+        mstch::map rx_map {
+            {"rx_code" , ss1.str()},
+            {"rx_code_asm", ss2.str()}
+        };
+
+	for (size_t i = 0; i < randomx::RegistersCount; ++i)
+	{
+	    rx_map["r"+std::to_string(i)] = as_hex(reg_file.r[i]);
+	}
+
+	for (size_t i = 0; i < randomx::RegistersCount/2; ++i)
+	{
+	    rx_map["f"+std::to_string(i)] = rx_float_as_str(reg_file.f[i]);
+	    rx_map["e"+std::to_string(i)] = rx_float_as_str(reg_file.e[i]);
+	    rx_map["a"+std::to_string(i)] = rx_float_as_str(reg_file.a[i]);
+	}
+
+        return rx_map;
+    }
+
+    string
+    rx_float_as_str(randomx::fpu_reg_t fpu)
+    {
+	uint64_t* lo = reinterpret_cast<uint64_t*>(&fpu.lo);
+	uint64_t* hi = reinterpret_cast<uint64_t*>(&fpu.hi);
+
+	return 	 "{" + as_hex(*lo) + ", " + as_hex(*hi)+ "}";
+    }
+};
+
+// modified version of the get_block_longhash
+// from wazn to use me_rx_slow_hash
+bool
+me_get_block_longhash(const Blockchain *pbc,
+                   const block& b,
+                   crypto::hash& res,
+                   const uint64_t height,
+                   const int miners)
+{
+  // block 202612 bug workaround
+  if (height == 202612)
+  {
+    static const std::string longhash_202612 = "84f64766475d51837ac9efbef1926486e58563c95a19fef4aec3254f03000000";
+    epee::string_tools::hex_to_pod(longhash_202612, res);
+    return true;
+  }
+  blobdata bd = get_block_hashing_blob(b);
+  if (b.major_version >= RX_BLOCK_VERSION)
+  {
+    uint64_t seed_height, main_height;
+    crypto::hash hash;
+
+    if (pbc != NULL)
+    {
+      seed_height = me_rx_seedheight(height);
+      hash = pbc->get_pending_block_id_by_height(seed_height);
+      main_height = pbc->get_current_blockchain_height();
+    } else
+    {
+      memset(&hash, 0, sizeof(hash));  // only happens when generating genesis block
+      seed_height = 0;
+      main_height = 0;
+    }
+
+    me_rx_slow_hash(main_height, seed_height,
+                    hash.data, bd.data(),
+                    bd.size(), res.data, miners, 0);
+  }
+  return true;
+}
+
+
 /**
 * @brief The tx_details struct
 *
@@ -256,10 +323,6 @@ struct tx_details
 
     bool has_additional_tx_pub_keys {false};
 
-    char     pID; // '-' - no payment ID,
-                  // 'l' - legacy, long 64 character payment id,
-                  // 'e' - encrypted, short, from integrated addresses
-                  // 's' - sub-address (avaliable only for multi-output txs)
     uint64_t unlock_time;
     uint64_t no_confirmations;
     vector<uint8_t> extra;
@@ -267,14 +330,12 @@ struct tx_details
     crypto::hash  payment_id  = null_hash; // normal
     crypto::hash8 payment_id8 = null_hash8; // encrypted
 
-    string payment_id_as_ascii;
-
     std::vector<std::vector<crypto::signature>> signatures;
 
     // key images of inputs
     vector<txin_to_key> input_key_imgs;
 
-    // public keys and WAZN amount of outputs
+    // public keys and wazn amount of outputs
     vector<pair<txout_to_key, uint64_t>> output_pub_keys;
 
     mstch::map
@@ -328,7 +389,6 @@ struct tx_details
                 {"version"           , static_cast<uint64_t>(version)},
                 {"has_payment_id"    , payment_id  != null_hash},
                 {"has_payment_id8"   , payment_id8 != null_hash8},
-                {"pID"               , string {pID}},
                 {"payment_id"        , pod_to_hex(payment_id)},
                 {"confirmations"     , no_confirmations},
                 {"extra"             , get_extra_str()},
@@ -404,21 +464,17 @@ bool mainnet;
 bool testnet;
 bool stagenet;
 
-bool enable_js;
 
 bool enable_pusher;
+
+bool enable_randomx;
 
 bool enable_key_image_checker;
 bool enable_output_key_checker;
 bool enable_mixins_details;
-bool enable_tx_cache;
-bool enable_block_cache;
 bool enable_as_hex;
-bool show_cache_times;
-
 
 bool enable_autorefresh_option;
-
 
 uint64_t no_of_mempool_tx_of_frontpage;
 uint64_t no_blocks_on_index;
@@ -438,24 +494,6 @@ string js_html_files_all_in_one;
 // read operation in OS
 map<string, string> template_file;
 
-
-// alias for easy class typing
-template <typename Key, typename Value>
-using lru_cache_t = caches::fixed_sized_cache<Key, Value, caches::LRUCachePolicy<Key>>;
-
-
-// alias for easy class typing
-template <typename Key, typename Value>
-using fifo_cache_t = caches::fixed_sized_cache<Key, Value, caches::FIFOCachePolicy<Key>>;
-
-// cache of txs_map of txs in blocks. this is useful for
-// index2 page, so that we dont parse txs in each block
-// for each request.
-fifo_cache_t<uint64_t, vector<pair<crypto::hash, mstch::node>>> block_tx_cache;
-
-lru_cache_t<tx_info_cache::key, tx_info_cache> tx_context_cache;
-
-
 public:
 
 page(MicroCore* _mcore,
@@ -463,42 +501,35 @@ page(MicroCore* _mcore,
      string _deamon_url,
      cryptonote::network_type _nettype,
      bool _enable_pusher,
-     bool _enable_js,
+     bool _enable_randomx,
      bool _enable_as_hex,
      bool _enable_key_image_checker,
      bool _enable_output_key_checker,
      bool _enable_autorefresh_option,
      bool _enable_mixins_details,
-     bool _enable_tx_cache,
-     bool _enable_block_cache,
-     bool _show_cache_times,
      uint64_t _no_blocks_on_index,
      uint64_t _mempool_info_timeout,
      string _testnet_url,
      string _stagenet_url,
-     string _mainnet_url)
+     string _mainnet_url,
+     rpccalls::login_opt _daemon_rpc_login)
         : mcore {_mcore},
           core_storage {_core_storage},
-          rpc {_deamon_url},
+          rpc {_deamon_url, _daemon_rpc_login},
           server_timestamp {std::time(nullptr)},
           nettype {_nettype},
           enable_pusher {_enable_pusher},
-          enable_js {_enable_js},
+          enable_randomx {_enable_randomx},
           enable_as_hex {_enable_as_hex},
           enable_key_image_checker {_enable_key_image_checker},
           enable_output_key_checker {_enable_output_key_checker},
           enable_autorefresh_option {_enable_autorefresh_option},
           enable_mixins_details {_enable_mixins_details},
-          enable_tx_cache {_enable_tx_cache},
-          enable_block_cache {_enable_block_cache},
-          show_cache_times {_show_cache_times},
           no_blocks_on_index {_no_blocks_on_index},
           mempool_info_timeout {_mempool_info_timeout},
           testnet_url {_testnet_url},
           stagenet_url {_stagenet_url},
-          mainnet_url {_mainnet_url},
-          block_tx_cache(200),
-          tx_context_cache(1000)
+          mainnet_url {_mainnet_url}
 {
     mainnet = nettype == cryptonote::network_type::MAINNET;
     testnet = nettype == cryptonote::network_type::TESTNET;
@@ -518,6 +549,7 @@ page(MicroCore* _mcore,
     template_file["mempool_error"]   = wazneg::read(TMPL_MEMPOOL_ERROR);
     template_file["mempool_full"]    = get_full_page(template_file["mempool"]);
     template_file["block"]           = get_full_page(wazneg::read(TMPL_BLOCK));
+    template_file["randomx"]         = get_full_page(wazneg::read(TMPL_RANDOMX));
     template_file["tx"]              = get_full_page(wazneg::read(TMPL_TX));
     template_file["my_outputs"]      = get_full_page(wazneg::read(TMPL_MY_OUTPUTS));
     template_file["rawtx"]           = get_full_page(wazneg::read(TMPL_MY_RAWTX));
@@ -532,65 +564,6 @@ page(MicroCore* _mcore,
     template_file["tx_details"]      = wazneg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html");
     template_file["tx_table_header"] = wazneg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
     template_file["tx_table_row"]    = wazneg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
-
-    if (enable_js) {
-        // JavaScript files
-        template_file["jquery.min.js"]   = wazneg::read(JS_JQUERY);
-        template_file["crc32.js"]        = wazneg::read(JS_CRC32);
-        template_file["crypto.js"]       = wazneg::read(JS_CRYPTO);
-        template_file["cn_util.js"]      = wazneg::read(JS_CNUTIL);
-        template_file["base58.js"]       = wazneg::read(JS_BASE58);
-        template_file["nacl-fast-cn.js"] = wazneg::read(JS_NACLFAST);
-        template_file["sha3.js"]         = wazneg::read(JS_SHA3);
-        template_file["config.js"]       = wazneg::read(JS_CONFIG);
-        template_file["biginteger.js"]   = wazneg::read(JS_BIGINT);
-
-        // need to set  "testnet: false," flag to reflect
-        // if we are running testnet or mainnet explorer
-
-        if (testnet)
-        {
-            template_file["config.js"] = std::regex_replace(
-                    template_file["config.js"],
-                    std::regex("testnet: false"),
-                    "testnet: true");
-        }
-
-        // the same idea as above for the stagenet
-
-        if (stagenet)
-        {
-            template_file["config.js"] = std::regex_replace(
-                    template_file["config.js"],
-                    std::regex("stagenet: false"),
-                    "stagenet: true");
-        }
-
-        template_file["all_in_one.js"] = template_file["jquery.min.js"] +
-                                         template_file["crc32.js"] +
-                                         template_file["biginteger.js"] +
-                                         template_file["config.js"] +
-                                         template_file["nacl-fast-cn.js"] +
-                                         template_file["crypto.js"] +
-                                         template_file["base58.js"] +
-                                         template_file["cn_util.js"] +
-                                         template_file["sha3.js"];
-
-        js_html_files += "<script src=\"/js/jquery.min.js\"></script>";
-        js_html_files += "<script src=\"/js/crc32.js\"></script>";
-        js_html_files += "<script src=\"/js/biginteger.js\"></script>";
-        js_html_files += "<script src=\"/js/config.js\"></script>";
-        js_html_files += "<script src=\"/js/nacl-fast-cn.js\"></script>";
-        js_html_files += "<script src=\"/js/crypto.js\"></script>";
-        js_html_files += "<script src=\"/js/base58.js\"></script>";
-        js_html_files += "<script src=\"/js/cn_util.js\"></script>";
-        js_html_files += "<script src=\"/js/sha3.js\"></script>";
-
-        // /js/all_in_one.js file does not exist. it is generated on the fly
-        // from the above real files.
-        js_html_files_all_in_one = "<script src=\"/js/all_in_one.js\"></script>";
-    }
-
 }
 
 /**
@@ -655,8 +628,7 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
             {"enable_pusher"            , enable_pusher},
             {"enable_key_image_checker" , enable_key_image_checker},
             {"enable_output_key_checker", enable_output_key_checker},
-            {"enable_autorefresh_option", enable_autorefresh_option},
-            {"show_cache_times"         , show_cache_times}
+            {"enable_autorefresh_option", enable_autorefresh_option}
     };
 
     context.emplace("txs", mstch::array()); // will keep tx to show
@@ -673,12 +645,6 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     int64_t end_height = start_height + no_of_last_blocks - 1;
 
     vector<double> blk_sizes;
-
-    // measure time of cache based execution, and non-cached execution
-    double duration_cached     {0.0};
-    double duration_non_cached {0.0};
-    uint64_t cache_hits   {0};
-    uint64_t cache_misses {0};
 
     // loop index
     int64_t i = end_height;
@@ -714,193 +680,67 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
 
         context["age_format"] = age.second;
 
+        // start measure time here
+        auto start = std::chrono::steady_clock::now();
 
-        if (enable_block_cache && block_tx_cache.Contains(i))
+        // get all transactions in the block found
+        // initialize the first list with transaction for solving
+        // the block i.e. coinbase.
+        vector<cryptonote::transaction> blk_txs {blk.miner_tx};
+        vector<crypto::hash> missed_txs;
+
+        if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
         {
-            // get txs info in the ith block from
-            // our cache
-
-            // start measure time here
-            auto start = std::chrono::steady_clock::now();
-
-            const vector<pair<crypto::hash, mstch::node>>& txd_pairs
-                    = block_tx_cache.Get(i);
-
-            // copy tx maps from txs_maps_tmp into txs array,
-            // that will go to templates
-            for (const pair<crypto::hash, mstch::node>& txd_pair: txd_pairs)
-            {
-                // we need to check if the given transaction is still
-                // in the same block as when it was cached. it is possible
-                // the block got orphaned, and this tx is in mempool
-                // or different block, and what we have in cache
-                // is thus wrong
-
-                // but we do this only for first top blocks. no sense
-                // doing it for all blocks
-
-                bool is_tx_still_in_block_as_expected {true};
-
-                if (i + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE > height)
-                {
-                    const crypto::hash& tx_hash = txd_pair.first;
-
-                    if (core_storage->have_tx(tx_hash))
-                    {
-                        try
-                        {
-                            uint64_t tx_height_in_blockchain =
-                                    core_storage->get_db().get_tx_block_height(tx_hash);
-
-                            // check if height of the given tx that we have in cache,
-                            // denoted by i, is same as what is acctually stored
-                            // in blockchain
-                            if (tx_height_in_blockchain == i)
-                            {
-                                is_tx_still_in_block_as_expected = true;
-                            }
-                            else
-                            {
-                                // if no tx in the given block, just stop
-                                // any futher search. no need. we are going
-                                // to ditch the cache, in a monent
-                                is_tx_still_in_block_as_expected = false;
-                                break;
-                            }
-                        }
-                        catch (const TX_DNE& e)
-                        {
-                            cerr << "Tx from cache" << pod_to_hex(tx_hash)
-                                 << " is no longer in the blockchain "
-                                 << endl;
-
-                            is_tx_still_in_block_as_expected = false;
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        is_tx_still_in_block_as_expected = false;
-                        break;
-                    }
-
-                } // if (i + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE > height)
-
-
-                if (!is_tx_still_in_block_as_expected)
-                {
-                    // if some tx in cache is not in blockchain
-                    // where it should be, its probably better to
-                    // ditch entire cache, as redo it below.
-
-                    block_tx_cache.Clear();
-                    txs.clear();
-                    i = end_height;
-                    continue; // reado the main loop
-                }
-
-                // if we got to here, it means that everything went fine
-                // and no unexpeced things happended.
-                mstch::map txd_map = boost::get<mstch::map>(txd_pair.second);
-
-                // now we need to update age of txs from cashe
-                if (!boost::get<string>(txd_map["age"]).empty())
-                {
-                    txd_map["age"] = age.first;
-                }
-
-                txs.push_back(txd_map);
-
-            }  // for (const pair<crypto::hash, mstch::map>& txd_pair: txd_pairs)
-
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>
-                    (std::chrono::steady_clock::now() - start);
-
-            // cout << "block_tx_json_cache from cache" << endl;
-
-            duration_cached += duration.count();
-
-            ++cache_hits;
+            cerr << "Cant get transactions in block: " << i << endl;
+            --i;
+            continue;
         }
-        else
+
+        uint64_t tx_i {0};
+
+        //          tx_hash     , txd_map
+        vector<pair<crypto::hash, mstch::node>> txd_pairs;
+
+        for(auto it = blk_txs.begin(); it != blk_txs.end(); ++it)
         {
-            // this is new block. not in cashe.
-            // need to process its txs and add to cache
+            const cryptonote::transaction& tx = *it;
 
-            // start measure time here
-            auto start = std::chrono::steady_clock::now();
+            const tx_details& txd = get_tx_details(tx, false, i, height);
 
-            // get all transactions in the block found
-            // initialize the first list with transaction for solving
-            // the block i.e. coinbase.
-            vector<cryptonote::transaction> blk_txs {blk.miner_tx};
-            vector<crypto::hash> missed_txs;
+            mstch::map txd_map = txd.get_mstch_map();
 
-            if (!core_storage->get_transactions(blk.tx_hashes, blk_txs, missed_txs))
+            //add age to the txd mstch map
+            txd_map.insert({"height"    , i});
+            txd_map.insert({"blk_hash"  , blk_hash_str});
+            txd_map.insert({"age"       , age.first});
+            txd_map.insert({"is_ringct" , (tx.version > 1)});
+            txd_map.insert({"rct_type"  , tx.rct_signatures.type});
+            txd_map.insert({"blk_size"  , blk_size_str});
+
+
+            // do not show block info for other than first tx in a block
+            if (tx_i > 0)
             {
-                cerr << "Cant get transactions in block: " << i << endl;
-                --i;
-                continue;
+                txd_map["height"]     = string("");
+                txd_map["age"]        = string("");
+                txd_map["blk_size"]   = string("");
             }
 
-            uint64_t tx_i {0};
+            txd_pairs.emplace_back(txd.hash, txd_map);
 
-            // this vector will go into block_tx cache
-            //          tx_hash     , txd_map
-            vector<pair<crypto::hash, mstch::node>> txd_pairs;
+            ++tx_i;
 
-            for(auto it = blk_txs.begin(); it != blk_txs.end(); ++it)
-            {
-                const cryptonote::transaction& tx = *it;
+        } // for(list<cryptonote::transaction>::reverse_iterator rit = blk_txs.rbegin();
 
-                const tx_details& txd = get_tx_details(tx, false, i, height);
+        // copy tx maps from txs_maps_tmp into txs array,
+        // that will go to templates
+        for (const pair<crypto::hash, mstch::node>& txd_pair: txd_pairs)
+        {
+            txs.push_back(boost::get<mstch::map>(txd_pair.second));
+        }
 
-                mstch::map txd_map = txd.get_mstch_map();
-
-                //add age to the txd mstch map
-                txd_map.insert({"height"    , i});
-                txd_map.insert({"blk_hash"  , blk_hash_str});
-                txd_map.insert({"age"       , age.first});
-                txd_map.insert({"is_ringct" , (tx.version > 1)});
-                txd_map.insert({"rct_type"  , tx.rct_signatures.type});
-                txd_map.insert({"blk_size"  , blk_size_str});
-
-
-                // do not show block info for other than first tx in a block
-                if (tx_i > 0)
-                {
-                    txd_map["height"]     = string("");
-                    txd_map["age"]        = string("");
-                    txd_map["blk_size"]   = string("");
-                }
-
-                txd_pairs.emplace_back(txd.hash, txd_map);
-
-                ++tx_i;
-
-            } // for(list<cryptonote::transaction>::reverse_iterator rit = blk_txs.rbegin();
-
-            // copy tx maps from txs_maps_tmp into txs array,
-            // that will go to templates
-            for (const pair<crypto::hash, mstch::node>& txd_pair: txd_pairs)
-            {
-                txs.push_back(boost::get<mstch::map>(txd_pair.second));
-            }
-
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>
-                    (std::chrono::steady_clock::now() - start);
-
-            duration_non_cached += duration.count();
-
-            ++cache_misses;
-
-            if (enable_block_cache)
-            {
-                // save in block_tx cache
-                block_tx_cache.Put(i, txd_pairs);
-            }
-
-        } // else if (block_tx_json_cache.Contains(i))
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>
+                (std::chrono::steady_clock::now() - start);
 
         --i; // go to next block number
 
@@ -909,21 +749,6 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     // calculate median size of the blocks shown
     //double blk_size_median = wazneg::calc_median(blk_sizes.begin(), blk_sizes.end());
 
-    // save computational times for disply in the frontend
-
-    context["construction_time_cached"] = fmt::format(
-            "{:0.4f}", duration_cached/1.0e6);
-
-    context["construction_time_non_cached"] = fmt::format(
-            "{:0.4f}", duration_non_cached/1.0e6);
-
-    context["construction_time_total"] = fmt::format(
-            "{:0.4f}", (duration_non_cached+duration_cached)/1.0e6);
-
-    context["cache_hits"]   = cache_hits;
-    context["cache_misses"] = cache_misses;
-
-
     // get current network info from MemoryStatus thread.
     MempoolStatus::network_info current_network_info
         = MempoolStatus::current_network_info;
@@ -931,12 +756,19 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     // perapre network info mstch::map for the front page
     string hash_rate;
 
-    if (current_network_info.hash_rate > 1e6)
-        hash_rate = fmt::format("{:0.3f} MH/s", current_network_info.hash_rate/1.0e6);
-    else if (current_network_info.hash_rate > 1e3)
-        hash_rate = fmt::format("{:0.3f} kH/s", current_network_info.hash_rate/1.0e3);
+    double hr_d;
+    char metric_prefix;
+
+    cryptonote::difficulty_type hr = make_difficulty(
+            current_network_info.hash_rate,
+            current_network_info.hash_rate_top64);
+
+    get_metric_prefix(hr, hr_d, metric_prefix);
+
+    if (metric_prefix != 0)
+        hash_rate = fmt::format("{:0.3f} {:c}H/s", hr_d, metric_prefix);
     else
-        hash_rate = fmt::format("{:d} H/s", current_network_info.hash_rate);
+        hash_rate = fmt::format("{:s} H/s", hr.str());
 
     pair<string, string> network_info_age = get_age(local_copy_server_timestamp,
                                                     current_network_info.info_timestamp);
@@ -1049,7 +881,6 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
     // initalise page tempate map with basic info about mempool
     mstch::map context {
             {"mempool_size"          , static_cast<uint64_t>(total_no_of_mempool_tx)}, // total no of mempool txs
-            {"show_cache_times"      , show_cache_times},
             {"mempool_refresh_time"  , MempoolStatus::mempool_refresh_time}
     };
 
@@ -1057,11 +888,6 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
 
     // get reference to blocks template map to be field below
     mstch::array& txs = boost::get<mstch::array>(context["mempooltxs"]);
-
-    double duration_cached     {0.0};
-    double duration_non_cached {0.0};
-    uint64_t cache_hits   {0};
-    uint64_t cache_misses {0};
 
     uint64_t local_copy_server_timestamp = server_timestamp;
 
@@ -1093,7 +919,6 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
                                   delta_time[3], delta_time[4]);
         }
 
-        // cout << "block_tx_json_cache from cache" << endl;
 
         // set output page template map
         txs.push_back(mstch::map {
@@ -1101,15 +926,12 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
                 {"timestamp"       , mempool_tx.timestamp_str},
                 {"age"             , age_str},
                 {"hash"            , pod_to_hex(mempool_tx.tx_hash)},
-                {"fee"             , mempool_tx.fee_str},
-                {"fee_micro"       , mempool_tx.fee_micro_str},
-                {"payed_for_kB"    , mempool_tx.payed_for_kB_str},
-                {"payed_for_kB_micro"    , mempool_tx.payed_for_kB_micro_str},
+                {"fee"             , mempool_tx.fee_micro_str},
+                {"payed_for_kB"    , mempool_tx.payed_for_kB_micro_str},
                 {"wazn_inputs"      , mempool_tx.wazn_inputs_str},
                 {"wazn_outputs"     , mempool_tx.wazn_outputs_str},
                 {"no_inputs"       , mempool_tx.no_inputs},
                 {"no_outputs"      , mempool_tx.no_outputs},
-                {"pID"             , string {mempool_tx.pID}},
                 {"no_nonrct_inputs", mempool_tx.num_nonrct_inputs},
                 {"mixin"           , mempool_tx.mixin_no},
                 {"txsize"          , mempool_tx.txsize}
@@ -1208,7 +1030,6 @@ altblocks()
 string
 show_block(uint64_t _blk_height)
 {
-
     // get block at the given height i
     block blk;
 
@@ -1293,8 +1114,8 @@ show_block(uint64_t _blk_height)
 
     // initalise page tempate map with basic info about blockchain
 
-    string blk_pow_hash_str = pod_to_hex(get_block_longhash(blk, _blk_height));
-    uint64_t blk_difficulty = core_storage->get_db().get_block_difficulty(_blk_height);
+    string blk_pow_hash_str = pod_to_hex(get_block_longhash(core_storage, blk, _blk_height, 0));
+    cryptonote::difficulty_type blk_difficulty = core_storage->get_db().get_block_difficulty(_blk_height);
 
     mstch::map context {
             {"testnet"              , testnet},
@@ -1315,7 +1136,9 @@ show_block(uint64_t _blk_height)
             {"delta_time"           , delta_time},
             {"blk_nonce"            , blk.nonce},
             {"blk_pow_hash"         , blk_pow_hash_str},
-            {"blk_difficulty"       , blk_difficulty},
+            {"is_randomx"           , (blk.major_version >= 12
+                                            && enable_randomx == true)},
+            {"blk_difficulty"       , blk_difficulty.str()},
             {"age_format"           , age.second},
             {"major_ver"            , std::to_string(blk.major_version)},
             {"minor_ver"            , std::to_string(blk.minor_version)},
@@ -1377,7 +1200,7 @@ show_block(uint64_t _blk_height)
     context["sum_fees"]
             = wazneg::wazn_amount_to_str(sum_fees, "{:0.6f}", false);
 
-    // get WAZN in the block reward
+    // get wazn in the block reward
     context["blk_reward"]
             = wazneg::wazn_amount_to_str(txd_coinbase.wazn_outputs - sum_fees, "{:0.6f}");
 
@@ -1412,6 +1235,70 @@ show_block(string _blk_hash)
     }
 
     return show_block(blk_height);
+}
+
+string
+show_randomx(uint64_t _blk_height)
+{
+    if (enable_randomx == false)
+    {
+        return "RandomX code generation disabled! Use --enable-randomx"
+               " flag to enable if.";
+    }
+
+    // get block at the given height i
+    block blk;
+
+    uint64_t current_blockchain_height
+            =  core_storage->get_current_blockchain_height();
+
+    if (_blk_height > current_blockchain_height)
+    {
+        cerr << "Cant get block: " << _blk_height
+             << " since its higher than current blockchain height"
+             << " i.e., " <<  current_blockchain_height
+             << endl;
+        return fmt::format("Cant get block {:d} since its higher than current blockchain height!",
+                           _blk_height);
+    }
+
+    if (!mcore->get_block_by_height(_blk_height, blk))
+    {
+        cerr << "Cant get block: " << _blk_height << endl;
+        return fmt::format("Cant get block {:d}!", _blk_height);
+    }
+
+    // get block's hash
+    crypto::hash blk_hash = core_storage->get_block_id_by_height(_blk_height);
+
+    string blk_hash_str  = pod_to_hex(blk_hash);
+
+
+    auto rx_code = get_randomx_code(_blk_height,
+                                    blk, blk_hash);
+
+    mstch::array rx_code_str = mstch::array{};
+    int code_idx {1};
+
+    for (auto& rxc: rx_code)
+    {
+        mstch::map rx_map = rxc.get_mstch();
+        rx_map["first_program"] = (code_idx == 1);
+        rx_map["rx_code_idx"] = code_idx++;
+        rx_code_str.push_back(rx_map);
+    }
+
+    mstch::map context {
+            {"testnet"              , testnet},
+            {"stagenet"             , stagenet},
+            {"blk_hash"             , blk_hash_str},
+            {"blk_height"           , _blk_height},
+            {"rx_codes"             , rx_code_str},
+    };
+
+    add_css_style(context);
+
+    return mstch::render(template_file["randomx"], context);
 }
 
 string
@@ -1475,149 +1362,8 @@ show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0, bool refresh_page
 
     mstch::map tx_context;
 
-    if (enable_tx_cache && tx_context_cache.Contains({tx_hash, static_cast<bool>(with_ring_signatures)}))
-    {
-        // with_ring_signatures == 0 means that cache is not used
-        // when obtaining detailed information about tx is requested.
 
-        // we are going to measure time for the construction of the
-        // tx context from cashe. just for fun, to see if cache is any faster.
-        auto start = std::chrono::steady_clock::now();
-
-        const tx_info_cache& tx_info_cashed
-                = tx_context_cache.Get({tx_hash, static_cast<bool>(with_ring_signatures)});
-
-        tx_context = tx_info_cashed.tx_map;
-
-        //cout << "get tx from cash: " << tx_hash_str <<endl;
-        //cout << " - tx_blk_height: " << boost::get<uint64_t>(tx_context["tx_blk_height"]) <<endl;
-        //cout << " - blk_timestamp_uint: " << boost::get<uint64_t>(tx_context["blk_timestamp_uint"]) <<endl;
-
-        // now have to update age and confirmation numbers of the tx.
-
-        uint64_t tx_blk_height      = boost::get<uint64_t>(tx_context["tx_blk_height"]);
-        uint64_t blk_timestamp_uint = boost::get<uint64_t>(tx_context["blk_timestamp_uint"]);
-
-        if (tx_blk_height > 0)
-        {
-            // seems to be in blockchain. off course it could have been orphaned
-            // so double check if its for sure in blockchain
-
-            if (core_storage->have_tx(tx_hash))
-            {
-                // ok, it is still in blockchain
-                // update its age and number of confirmations
-
-                pair<string, string> age
-                        = get_age(std::time(nullptr),
-                                  blk_timestamp_uint,
-                                  FULL_AGE_FORMAT);
-
-                tx_context["delta_time"] = age.first;
-
-                uint64_t bc_height = core_storage->get_current_blockchain_height();
-
-                tx_context["confirmations"] = bc_height - (tx_blk_height - 1);
-
-                // marke it as from cashe. useful if we want to show
-                // info about cashed/not cashed in frontend.
-                tx_context["from_cache"] = true;
-
-                auto duration = std::chrono::duration_cast<std::chrono::microseconds>
-                        (std::chrono::steady_clock::now() - start);
-
-                tx_context["construction_time"] = fmt::format(
-                        "{:0.4f}", static_cast<double>(duration.count())/1.0e6);
-
-                // normally we should update this into in the cache.
-                // but since we make this check all the time,
-                // we can skip updating cashed version
-
-            } // if (core_storage->have_tx(tx_hash))
-            else
-            {
-                // its not in blockchain, but it was there when we cashed it.
-                // so we update it in cash, as it should be back in mempool
-
-                tx_context = construct_tx_context(tx, static_cast<bool>(with_ring_signatures));
-
-                tx_context_cache.Put(
-                        {tx_hash, static_cast<bool>(with_ring_signatures)},
-                        tx_info_cache {
-                                boost::get<uint64_t>(tx_context["tx_blk_height"]),
-                                boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
-                                tx_context}
-                );
-            }
-        } //  if (tx_blk_height > 0)
-        else
-        {
-            // the tx was cashed when in mempool.
-            // since then, it might have been included in some block.
-            // so we check it.
-
-            if (core_storage->have_tx(tx_hash))
-            {
-                // checking if in blockchain already
-                // it was before in mempool, but now maybe already in blockchain
-
-                tx_context = construct_tx_context(tx, static_cast<bool>(with_ring_signatures));
-
-                tx_context_cache.Put(
-                        {tx_hash, static_cast<bool>(with_ring_signatures)},
-                        tx_info_cache {
-                                boost::get<uint64_t>(tx_context["tx_blk_height"]),
-                                boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
-                                tx_context});
-
-
-            } // if (core_storage->have_tx(tx_hash))
-            else
-            {
-                // still seems to be in mempool only.
-                // so just get its time duration, as its read only
-                // from cache
-
-                tx_context["from_cache"] = true;
-
-                auto duration = std::chrono::duration_cast<std::chrono::microseconds>
-                        (std::chrono::steady_clock::now() - start);
-
-                tx_context["construction_time"] = fmt::format(
-                        "{:0.4f}", static_cast<double>(duration.count())/1.0e6);
-
-            }
-
-        }  // else if (tx_blk_height > 0)
-
-    } // if (tx_context_cache.Contains(tx_hash))
-    else
-    {
-
-        // we are going to measure time for the construction of the
-        // tx context. just for fun, to see if cache is any faster.
-        auto start = std::chrono::steady_clock::now();
-
-        tx_context = construct_tx_context(tx, static_cast<bool>(with_ring_signatures));
-
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>
-                (std::chrono::steady_clock::now() - start);
-
-        if (enable_tx_cache)
-        {
-            tx_context_cache.Put(
-                    {tx_hash, static_cast<bool>(with_ring_signatures)},
-                    tx_info_cache {
-                            boost::get<uint64_t>(tx_context["tx_blk_height"]),
-                            boost::get<uint64_t>(tx_context["blk_timestamp_uint"]),
-                            tx_context});
-        }
-
-        tx_context["construction_time"] = fmt::format(
-                "{:0.4f}", static_cast<double>(duration.count())/1.0e6);
-
-    } // else if (tx_context_cache.Contains(tx_hash))
-
+    tx_context = construct_tx_context(tx, static_cast<bool>(with_ring_signatures));
 
     tx_context["show_more_details_link"] = show_more_details_link;
 
@@ -1629,8 +1375,9 @@ show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0, bool refresh_page
     mstch::map context {
             {"testnet"          , this->testnet},
             {"stagenet"         , this->stagenet},
-            {"show_cache_times" , show_cache_times},
-            {"txs"              , mstch::array{}}
+            {"txs"              , mstch::array{}},
+            {"refresh"          , refresh_page},
+            {"tx_hash"          , tx_hash_str}
     };
 
     boost::get<mstch::array>(context["txs"]).push_back(tx_context);
@@ -1640,9 +1387,6 @@ show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0, bool refresh_page
     };
 
     add_css_style(context);
-
-    if (enable_js)
-        add_js_files(context);
 
     // render the page
     return mstch::render(template_file["tx"], context, partials);
@@ -1932,7 +1676,7 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
 
     // add placeholder for sender and recipient details
     // this is most useful for unit testing on stagenet/testnet
-    // private WAZN networks, so we can easly put these
+    // private wazn networks, so we can easly put these
     // networks accounts details here.
     tx_json["sender"] = json {
                             {"seed", ""},
@@ -2156,7 +1900,7 @@ show_my_outputs(string tx_hash_str,
 
     if (wazn_address_str.empty())
     {
-        return string("WAZN address not provided!");
+        return string("Wazn address not provided!");
     }
 
     if (viewkey_str.empty())
@@ -2176,13 +1920,13 @@ show_my_outputs(string tx_hash_str,
         return string("Cant get tx hash due to parse error: " + tx_hash_str);
     }
 
-    // parse string representing given WAZN address
+    // parse string representing given wazn address
     cryptonote::address_parse_info address_info;
 
     if (!wazneg::parse_str_address(wazn_address_str,  address_info, nettype))
     {
         cerr << "Cant parse string address: " << wazn_address_str << endl;
-        return string("Cant parse WAZN address: " + wazn_address_str);
+        return string("Cant parse wazn address: " + wazn_address_str);
     }
 
     // parse string representing given private key
@@ -2445,7 +2189,7 @@ show_my_outputs(string tx_hash_str,
 
         // get the tx output public key
         // that normally would be generated for us,
-        // if someone had sent us some WAZN.
+        // if someone had sent us some wazn.
         public_key tx_pubkey;
 
         derive_public_key(derivation,
@@ -2537,7 +2281,7 @@ show_my_outputs(string tx_hash_str,
 
     vector<txin_to_key> input_key_imgs = wazneg::get_key_images(tx);
 
-    // to hold sum of WAZN in matched mixins, those that
+    // to hold sum of wazn in matched mixins, those that
     // perfectly match mixin public key with outputs in mixn_tx.
     uint64_t sum_mixin_wazn {0};
 
@@ -2546,7 +2290,7 @@ show_my_outputs(string tx_hash_str,
     uint64_t no_of_matched_mixins {0};
 
     // Hold all possible mixins that we found. This is only used so that
-    // we get number of all posibilities, and their total WAZN amount
+    // we get number of all posibilities, and their total wazn amount
     // (useful for unit testing)
     //                     public_key    , amount
     std::vector<std::pair<crypto::public_key, uint64_t>> all_possible_mixins;
@@ -2756,7 +2500,7 @@ show_my_outputs(string tx_hash_str,
 
                 // get the tx output public key
                 // that normally would be generated for us,
-                // if someone had sent us some WAZN.
+                // if someone had sent us some wazn.
                 public_key tx_pubkey_generated;
 
                 derive_public_key(derivation,
@@ -2926,7 +2670,7 @@ show_my_outputs(string tx_hash_str,
 
     //cout << "\nall_possible_mixins: " << all_possible_mixins.size() << '\n';
 
-    // useful for unit testing as it provides total WAZN sum
+    // useful for unit testing as it provides total wazn sum
     // of possible mixins
     uint64_t all_possible_mixins_amount1  {0};
 
@@ -3026,8 +2770,6 @@ show_checkrawtx(string raw_tx_data, string action)
 
     add_css_style(context);
 
-    if (enable_js)
-        add_js_files(context);
 
     if (unsigned_tx_given)
     {
@@ -3374,8 +3116,6 @@ show_checkrawtx(string raw_tx_data, string action)
 
             add_css_style(context);
 
-            if (enable_js)
-                add_js_files(context);
 
             // render the page
             return mstch::render(template_file["checkrawtx"], context, partials);
@@ -3555,7 +3295,7 @@ show_checkrawtx(string raw_tx_data, string action)
             // mark that we have signed tx data for use in mstch
             tx_context["have_raw_tx"] = true;
 
-            // provide total mount of inputs WAZN
+            // provide total mount of inputs wazn
             tx_context["inputs_wazn_sum"] = wazneg::wazn_amount_to_str(inputs_wazn_sum);
 
             // get reference to inputs array created of the tx
@@ -3963,7 +3703,7 @@ show_checkrawkeyimgs(string raw_data, string viewkey_str)
 
     }
 
-    // get WAZN address stored in this key image file
+    // get wazn address stored in this key image file
     const account_public_address* wazn_address =
             reinterpret_cast<const account_public_address*>(
                     decoded_raw_data.data());
@@ -4098,7 +3838,7 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
     // header is public spend and keys
     const size_t header_lenght    = 2 * sizeof(crypto::public_key);
 
-    // get WAZN address stored in this key image file
+    // get wazn address stored in this key image file
     const account_public_address* wazn_address =
             reinterpret_cast<const account_public_address*>(
                     decoded_raw_data.data());
@@ -4316,11 +4056,11 @@ search(string search_text)
     result_html = default_txt;
 
 
-    // check if WAZN address is given based on its length
+    // check if wazn address is given based on its length
     // if yes, then we can only show its public components
     if (search_str_length == 95)
     {
-        // parse string representing given WAZN address
+        // parse string representing given wazn address
         address_parse_info address_info;
 
         cryptonote::network_type nettype_addr {cryptonote::network_type::MAINNET};
@@ -4340,7 +4080,7 @@ search(string search_text)
         return show_address_details(address_info, nettype_addr);
     }
 
-    // check if integrated WAZN address is given based on its length
+    // check if integrated wazn address is given based on its length
     // if yes, then show its public components search tx based on encrypted id
     if (search_str_length == 106)
     {
@@ -4775,11 +4515,6 @@ json_transaction(string tx_hash_str)
         no_confirmations = txd.no_confirmations;
     }
 
-    // get tx from tx fetched. can be use to double check
-    // if what we return in the json response agrees with
-    // what tx_hash was requested
-    string tx_hash_str_again = pod_to_hex(get_transaction_hash(tx));
-
     // get basic tx info
     j_data = get_tx_json(tx, txd);
 
@@ -4865,7 +4600,7 @@ json_rawtransaction(string tx_hash_str)
         }
     }
 
-    // get raw tx json as in WAZN
+    // get raw tx json as in wazn
 
     try
     {
@@ -5153,7 +4888,7 @@ json_rawblock(string block_no_or_hash)
         return j_response;
     }
 
-    // get raw tx json as in WAZN
+    // get raw tx json as in wazn
 
     try
     {
@@ -5497,7 +5232,7 @@ json_outputs(string tx_hash_str,
     if (address_str.empty())
     {
         j_response["status"]  = "error";
-        j_response["message"] = "WAZN address not provided";
+        j_response["message"] = "Wazn address not provided";
         return j_response;
     }
 
@@ -5528,13 +5263,13 @@ json_outputs(string tx_hash_str,
         return j_response;
     }
 
-    // parse string representing given WAZN address
+    // parse string representing given wazn address
     address_parse_info address_info;
 
     if (!wazneg::parse_str_address(address_str,  address_info, nettype))
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Cant parse WAZN address: " + address_str;
+        j_response["message"] = "Cant parse wazn address: " + address_str;
         return j_response;
 
     }
@@ -5608,7 +5343,7 @@ json_outputs(string tx_hash_str,
 
         // get the tx output public key
         // that normally would be generated for us,
-        // if someone had sent us some WAZN.
+        // if someone had sent us some wazn.
         public_key tx_pubkey;
 
         derive_public_key(derivation,
@@ -5671,6 +5406,14 @@ json_outputs(string tx_hash_str,
 
     } // for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
 
+    // if we don't already have the tx_timestamp from the mempool
+    // then read it from the block that the transaction is in
+    if (!tx_timestamp && txd.blk_height > 0) {
+        block blk;
+        mcore->get_block_by_height(txd.blk_height, blk);
+        tx_timestamp = blk.timestamp;
+    }
+
     // return parsed values. can be use to double
     // check if submited data in the request
     // matches to what was used to produce response.
@@ -5678,6 +5421,8 @@ json_outputs(string tx_hash_str,
     j_data["address"]  = pod_to_hex(address_info.address);
     j_data["viewkey"]  = pod_to_hex(prv_view_key);
     j_data["tx_prove"] = tx_prove;
+    j_data["tx_confirmations"] = txd.no_confirmations;
+    j_data["tx_timestamp"] = tx_timestamp;
 
     j_response["status"] = "success";
 
@@ -5722,7 +5467,7 @@ json_outputsblocks(string _limit,
     if (address_str.empty())
     {
         j_response["status"]  = "error";
-        j_response["message"] = "WAZN address not provided";
+        j_response["message"] = "Wazn address not provided";
         return j_response;
     }
 
@@ -5733,13 +5478,13 @@ json_outputsblocks(string _limit,
         return j_response;
     }
 
-    // parse string representing given WAZN address
+    // parse string representing given wazn address
     address_parse_info address_info;
 
     if (!wazneg::parse_str_address(address_str, address_info, nettype))
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Cant parse WAZN address: " + address_str;
+        j_response["message"] = "Cant parse wazn address: " + address_str;
         return j_response;
 
     }
@@ -5888,7 +5633,7 @@ json_networkinfo()
     if (!get_wazn_network_info(j_info))
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Cant get WAZN network info";
+        j_response["message"] = "Cant get wazn network info";
         return j_response;
     }
 
@@ -6069,7 +5814,7 @@ find_our_outputs(
 
             // get the tx output public key
             // that normally would be generated for us,
-            // if someone had sent us some WAZN.
+            // if someone had sent us some wazn.
             public_key tx_pubkey;
 
             derive_public_key(derivation,
@@ -6301,9 +6046,6 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
     string tx_json = obj_to_json_str(tx);
 
-    // use this regex to remove all non friendly characters in payment_id_as_ascii string
-    static std::regex e {"[^a-zA-Z0-9 ./\\\\!]"};
-
     double tx_size = static_cast<double>(txd.size) / 1024.0;
 
     double payed_for_kB = WAZN_AMOUNT(txd.fee) / tx_size;
@@ -6332,7 +6074,6 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
             {"has_payment_id8"       , txd.payment_id8 != null_hash8},
             {"confirmations"         , txd.no_confirmations},
             {"payment_id"            , pid_str},
-            {"payment_id_as_ascii"   , remove_bad_chars(txd.payment_id_as_ascii)},
             {"payment_id8"           , pid8_str},
             {"extra"                 , txd.get_extra_str()},
             {"with_ring_signatures"  , static_cast<bool>(
@@ -6344,7 +6085,6 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
             {"error_msg"             , string("")},
             {"have_raw_tx"           , false},
             {"show_more_details_link", true},
-            {"from_cache"            , false},
             {"construction_time"     , string {}},
     };
 
@@ -6760,17 +6500,25 @@ get_tx_details(const transaction& tx,
     tx_details txd;
 
     // get tx hash
-    txd.hash = get_transaction_hash(tx);
+
+    if (!tx.pruned)
+    {
+        txd.hash = get_transaction_hash(tx);
+    }
+    else
+    {
+        txd.hash = get_pruned_transaction_hash(tx, tx.prunable_hash);
+    }
 
     // get tx public key from extra
     // this check if there are two public keys
     // due to previous bug with sining txs:
-    // https://github.com/wazn-project/wazn/
+    // https://github.com/wazn-project/wazn/pull/1358/commits/7abfc5474c0f86e16c405f154570310468b635c2
     txd.pk = wazneg::get_tx_pub_key_from_received_outs(tx);
     txd.additional_pks = cryptonote::get_additional_tx_pub_keys_from_extra(tx);
 
 
-    // sum WAZN in inputs and ouputs in the given tx
+    // sum wazn in inputs and ouputs in the given tx
     const array<uint64_t, 4>& sum_data = summary_of_in_out_rct(
             tx, txd.output_pub_keys, txd.input_key_imgs);
 
@@ -6792,31 +6540,12 @@ get_tx_details(const transaction& tx,
         }
     }
 
-    txd.pID = '-'; // no payment ID
-
     get_payment_id(tx, txd.payment_id, txd.payment_id8);
 
     // get tx size in bytes
     txd.size = get_object_blobsize(tx);
 
     txd.extra = tx.extra;
-
-    if (txd.payment_id != null_hash)
-    {
-        txd.payment_id_as_ascii = std::string(txd.payment_id.data, crypto::HASH_SIZE);
-        txd.pID = 'l'; // legacy payment id
-    }
-    else if (txd.payment_id8 != null_hash8)
-    {
-        txd.pID = 'e'; // encrypted payment id
-    }
-    else if (txd.additional_pks.empty() == false)
-    {
-        // if multioutput tx have additional public keys,
-        // mark it so that it represents that it has at least
-        // one sub-address
-        txd.pID = 's';
-    }
 
     // get tx signatures for each input
     txd.signatures = tx.signatures;
@@ -6990,7 +6719,7 @@ get_wazn_network_info(json& j_info)
        {"current"                   , local_copy_network_info.current},
        {"height"                    , local_copy_network_info.height},
        {"target_height"             , local_copy_network_info.target_height},
-       {"difficulty"                , local_copy_network_info.difficulty},
+       {"difficulty"                , make_difficulty(local_copy_network_info.difficulty, local_copy_network_info.difficulty_top64).str()},
        {"target"                    , local_copy_network_info.target},
        {"hash_rate"                 , local_copy_network_info.hash_rate},
        {"tx_count"                  , local_copy_network_info.tx_count},
@@ -7003,7 +6732,7 @@ get_wazn_network_info(json& j_info)
        {"testnet"                   , local_copy_network_info.nettype == cryptonote::network_type::TESTNET},
        {"stagenet"                  , local_copy_network_info.nettype == cryptonote::network_type::STAGENET},
        {"top_block_hash"            , pod_to_hex(local_copy_network_info.top_block_hash)},
-       {"cumulative_difficulty"     , local_copy_network_info.cumulative_difficulty},
+       {"cumulative_difficulty"     , make_difficulty(local_copy_network_info.cumulative_difficulty, local_copy_network_info.cumulative_difficulty_top64).str()},
        {"block_size_limit"          , local_copy_network_info.block_size_limit},
        {"block_size_median"         , local_copy_network_info.block_size_median},
        {"start_time"                , local_copy_network_info.start_time},
@@ -7090,8 +6819,6 @@ void
 add_css_style(mstch::map& context)
 {
     // add_css_style goes to every subpage so here we mark
-    // if js is anabled or not.
-    context["enable_js"] = enable_js;
 
     context["css_styles"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
         return template_file["css_styles"];
@@ -7133,13 +6860,70 @@ get_tx(string const& tx_hash_str,
     return true;
 }
 
-void
-add_js_files(mstch::map& context)
+vector<randomx_status>
+get_randomx_code(uint64_t blk_height,
+                 block const& blk,
+                 crypto::hash const& blk_hash)
 {
-    context["js_files"] = mstch::lambda{[&](const std::string& text) -> mstch::node {
-        //return this->js_html_files;
-        return this->js_html_files_all_in_one;
-    }};
+    static std::mutex mtx;
+
+    vector<randomx_status> rx_code;
+
+    blobdata bd = get_block_hashing_blob(blk);
+
+    std::lock_guard<std::mutex> lk {mtx};
+
+    if (!rx_vm)
+    {
+
+        crypto::hash block_hash;
+
+        // this will create rx_vm instance if one
+        // does not exist
+        me_get_block_longhash(core_storage, blk, block_hash, blk_height, 0);
+
+        if (!rx_vm)
+        {
+            cerr << "rx_vm is still null!";
+            return {};
+        }
+    }
+
+
+     // based on randomx calculate hash
+    // the hash is seed used to generated scrachtpad and program
+    alignas(16) uint64_t tempHash[8];
+    blake2b(tempHash, sizeof(tempHash), bd.data(), bd.size(), nullptr, 0);
+
+    rx_vm->initScratchpad(&tempHash);
+    rx_vm->resetRoundingMode();
+
+    for (int chain = 0; chain < RANDOMX_PROGRAM_COUNT - 1; ++chain)
+    {
+        rx_vm->run(&tempHash);
+
+        blake2b(tempHash, sizeof(tempHash),
+                rx_vm->getRegisterFile(),
+                sizeof(randomx::RegisterFile), nullptr, 0);
+
+        rx_code.push_back({});
+
+        rx_code.back().prog = rx_vm->getProgram();
+    	rx_code.back().reg_file = *(rx_vm->getRegisterFile());
+    }
+
+    rx_vm->run(&tempHash);
+
+    rx_code.push_back({});
+
+    rx_code.back().prog = rx_vm->getProgram();
+    rx_code.back().reg_file = *(rx_vm->getRegisterFile());
+
+    //crypto::hash res2;
+    //rx_vm->getFinalResult(res2.data, RANDOMX_HASH_SIZE);
+    //cout << "pow2: " << pod_to_hex(res2) << endl;
+
+    return rx_code;
 }
 
 template <typename T, typename... Args>

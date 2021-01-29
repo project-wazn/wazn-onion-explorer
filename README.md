@@ -261,5 +261,5 @@ By default the api is disabled. To enable it, use `--enable-json-api` flag, e.g.
 ```
 Licensed under the EUPL-1.2
 Copyright (c) 2019-2021 WAZN Project  
-Copyright (c) 2016-2018 moneroexamples
+Copyright (c) 2016-2018 waznexamples
 ```

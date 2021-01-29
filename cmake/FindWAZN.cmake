@@ -29,8 +29,9 @@
 #------------------------------------------------------------------------------
 
 set(LIBS common;blocks;cryptonote_basic;cryptonote_core;multisig;
-		cryptonote_protocol;daemonizer;mnemonics;epee;lmdb;device;
-		blockchain_db;ringct;wallet;cncrypto;easylogging;version;checkpoints)
+		cryptonote_protocol;daemonizer;mnemonics;epee;lmdb;device;wallet-crypto;
+		blockchain_db;ringct;wallet;cncrypto;easylogging;version;
+        checkpoints;randomx;hardforks;miniupnpc)
 
 set(Wazn_INCLUDE_DIRS "${CPP_WAZN_DIR}")
 
@@ -44,7 +45,7 @@ foreach (l ${LIBS})
 	find_library(Wazn_${L}_LIBRARY
 		NAMES ${l}
 		PATHS ${CMAKE_LIBRARY_PATH}
-		PATH_SUFFIXES "/src/${l}" "/src/" "/external/db_drivers/lib${l}" "/lib" "/src/crypto" "/contrib/epee/src" "/external/easylogging++/"
+		PATH_SUFFIXES "/src/${l}" "/src/" "/external/db_drivers/lib${l}" "/lib" "/src/crypto" "/src/crypto/wallet" "/contrib/epee/src" "/external/easylogging++/" "/external/${l}" "external/miniupnp/miniupnpc"
 		NO_DEFAULT_PATH
 	)
 
@@ -52,8 +53,10 @@ foreach (l ${LIBS})
 
 	message(STATUS FindWazn " Wazn_${L}_LIBRARIES ${Wazn_${L}_LIBRARY}")
 
+	if(NOT "${Wazn_${L}_LIBRARIES}" STREQUAL "${Wazn_${L}_LIBRARY-NOTFOUND}")
 	add_library(${l} STATIC IMPORTED)
-	set_property(TARGET ${l} PROPERTY IMPORTED_LOCATION ${Wazn_${L}_LIBRARIES})
+	  set_property(TARGET ${l} PROPERTY IMPORTED_LOCATION ${Wazn_${L}_LIBRARIES})
+	endif()
 
 endforeach()
 
@@ -70,8 +73,12 @@ message(STATUS ${WAZN_SOURCE_DIR}/build)
 # include WAZN headers
 include_directories(
 		${WAZN_SOURCE_DIR}/src
+    ${WAZN_SOURCE_DIR}/src/crypto
+    ${WAZN_SOURCE_DIR}/src/crypto/wallet
 		${WAZN_SOURCE_DIR}/external
+		${WAZN_SOURCE_DIR}/external/randomx/src
 		${WAZN_SOURCE_DIR}/build
 		${WAZN_SOURCE_DIR}/external/easylogging++
 		${WAZN_SOURCE_DIR}/contrib/epee/include
-		${WAZN_SOURCE_DIR}/external/db_drivers/liblmdb)
+    ${WAZN_SOURCE_DIR}/external/db_drivers/liblmdb
+    ${WAZN_SOURCE_DIR}/generated_include/crypto/wallet)

@@ -936,6 +936,8 @@ decode_ringct(rct::rctSig const& rv,
         {
             case rct::RCTTypeSimple:
             case rct::RCTTypeBulletproof:
+            case rct::RCTTypeBulletproof2:
+            case rct::RCTTypeCLSAG:
                 amount = rct::decodeRctSimple(rv,
                                               rct::sk2rct(scalar1),
                                               i,
@@ -1269,6 +1271,33 @@ string
 tx_to_hex(transaction const& tx)
 {
     return epee::string_tools::buff_to_hex_nodelimer(t_serializable_object_to_blob(tx));
+}
+
+void get_metric_prefix(cryptonote::difficulty_type hr, double& hr_d, char& prefix)
+{
+  if (hr < 1000)
+  {
+    prefix = 0;
+    return;
+}
+  static const char metric_prefixes[4] = { 'k', 'M', 'G', 'T' };
+  for (size_t i = 0; i < sizeof(metric_prefixes); ++i)
+  {
+    if (hr < 1000000)
+    {
+      hr_d = hr.convert_to<double>() / 1000;
+      prefix = metric_prefixes[i];
+      return;
+    }
+    hr /= 1000;
+  }
+  prefix = 0;
+}
+
+cryptonote::difficulty_type
+make_difficulty(uint64_t low, uint64_t high)
+{
+    return (cryptonote::difficulty_type(high) << 64) + low;
 }
 
 }

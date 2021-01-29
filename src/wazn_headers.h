@@ -5,14 +5,14 @@
 #ifndef WAZNEG01_WAZN_HEADERS_H_H
 #define WAZNEG01_WAZN_HEADERS_H_H
 
-#define DB_LMDB   1
+#define DB_LMDB   2
 #define BLOCKCHAIN_DB DB_LMDB
 
 
-#define UNSIGNED_TX_PREFIX "WAZN unsigned tx set\003"
-#define SIGNED_TX_PREFIX "WAZN signed tx set\003"
-#define KEY_IMAGE_EXPORT_FILE_MAGIC "WAZN key image export\002"
-#define OUTPUT_EXPORT_FILE_MAGIC "WAZN output export\003"
+#define UNSIGNED_TX_PREFIX "Wazn unsigned tx set\003"
+#define SIGNED_TX_PREFIX "Wazn signed tx set\003"
+#define KEY_IMAGE_EXPORT_FILE_MAGIC "Wazn key image export\002"
+#define OUTPUT_EXPORT_FILE_MAGIC "Wazn output export\003"
 
 #define FEE_ESTIMATE_GRACE_BLOCKS 10 // estimate fee valid for that many blocks
 
@@ -42,3 +42,4 @@
 
 
 #endif //WAZNEG01_WAZN_HEADERS_H_H
+

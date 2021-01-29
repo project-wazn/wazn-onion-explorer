@@ -4,7 +4,6 @@
 
 #include "MempoolStatus.h"
 
-#include "rpccalls.h"
 
 namespace wazneg
 {
@@ -97,7 +96,7 @@ MempoolStatus::start_mempool_status_thread()
 bool
 MempoolStatus::read_mempool()
 {
-    rpccalls rpc {daemon_url};
+    rpccalls rpc {deamon_url, login};
 
     string error_msg;
 
@@ -116,7 +115,8 @@ MempoolStatus::read_mempool()
     // get txpool from lmdb database instead of rpc call
     if (!mcore->get_mempool().get_transactions_and_spent_keys_info(
                 mempool_tx_info,
-                pool_key_image_info))
+                pool_key_image_info,
+                true))
     {
         cerr << "Getting mempool failed " << endl;
         return false;
@@ -196,29 +196,9 @@ MempoolStatus::read_mempool()
         last_tx.payed_for_kB_micro_str = fmt::format("{:04.0f}", payed_for_kB*1e6);
         last_tx.wazn_inputs_str   = wazneg::wazn_amount_to_str(last_tx.sum_inputs , "{:0.3f}");
         last_tx.wazn_outputs_str  = wazneg::wazn_amount_to_str(last_tx.sum_outputs, "{:0.3f}");
-        last_tx.timestamp_str    = wazneg::timestamp_to_str_gm(_tx_info.receive_time);
+        last_tx.timestamp_str     = wazneg::timestamp_to_str_gm(_tx_info.receive_time);
 
         last_tx.txsize           = fmt::format("{:0.2f}", tx_size);
-
-        last_tx.pID              = '-';
-
-        crypto::hash payment_id;
-        crypto::hash8 payment_id8;
-
-        get_payment_id(tx, payment_id, payment_id8);
-
-        if (payment_id != null_hash)
-            last_tx.pID = 'l'; // legacy payment id
-        else if (payment_id8 != null_hash8)
-            last_tx.pID = 'e'; // encrypted payment id
-        else if (!get_additional_tx_pub_keys_from_extra(tx).empty())
-        {
-            // if multioutput tx have additional public keys,
-            // mark it so that it represents that it has at least
-            // one sub-address
-            last_tx.pID = 's';
-        }
-       // } // if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
 
     } // for (size_t i = 0; i < mempool_tx_info.size(); ++i)
 
@@ -242,7 +222,7 @@ MempoolStatus::read_mempool()
 bool
 MempoolStatus::read_network_info()
 {
-    rpccalls rpc {daemon_url};
+    rpccalls rpc {deamon_url, login};
 
     COMMAND_RPC_GET_INFO::response rpc_network_info;
 
@@ -275,8 +255,11 @@ MempoolStatus::read_network_info()
     local_copy.height                     = rpc_network_info.height;
     local_copy.target_height              = rpc_network_info.target_height;
     local_copy.difficulty                 = rpc_network_info.difficulty;
+    local_copy.difficulty_top64           = rpc_network_info.difficulty_top64;
     local_copy.target                     = rpc_network_info.target;
-    local_copy.hash_rate                  = (rpc_network_info.difficulty/rpc_network_info.target);
+    cryptonote::difficulty_type hash_rate = cryptonote::difficulty_type(rpc_network_info.wide_difficulty) / rpc_network_info.target;
+    local_copy.hash_rate                  = (hash_rate & 0xFFFFFFFFFFFFFFFF).convert_to<uint64_t>();
+    local_copy.hash_rate_top64            = ((hash_rate >> 64) & 0xFFFFFFFFFFFFFFFF).convert_to<uint64_t>();
     local_copy.tx_count                   = rpc_network_info.tx_count;
     local_copy.tx_pool_size               = rpc_network_info.tx_pool_size;
     local_copy.alt_blocks_count           = rpc_network_info.alt_blocks_count;
@@ -286,6 +269,7 @@ MempoolStatus::read_network_info()
     local_copy.nettype                    = rpc_network_info.testnet ? cryptonote::network_type::TESTNET :
                                             rpc_network_info.stagenet ? cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
     local_copy.cumulative_difficulty      = rpc_network_info.cumulative_difficulty;
+    local_copy.cumulative_difficulty_top64 = rpc_network_info.cumulative_difficulty_top64;
     local_copy.block_size_limit           = rpc_network_info.block_size_limit;
     local_copy.block_size_median          = rpc_network_info.block_size_median;
     local_copy.block_weight_limit         = rpc_network_info.block_weight_limit;
@@ -341,13 +325,14 @@ MempoolStatus::is_thread_running()
     return is_running;
 }
 
-bf::path MempoolStatus::blockchain_path {"/home/mwo/.wazn/lmdb"};
-string MempoolStatus::daemon_url {"http:://127.0.0.1:11787"};
+bf::path MempoolStatus::blockchain_path {"/home/mwo/.bitwaznd/lmdb"};
+string MempoolStatus::deamon_url {"http:://127.0.0.1:11787"};
 cryptonote::network_type MempoolStatus::nettype {cryptonote::network_type::MAINNET};
 atomic<bool>       MempoolStatus::is_running {false};
 boost::thread      MempoolStatus::m_thread;
 Blockchain*        MempoolStatus::core_storage {nullptr};
 wazneg::MicroCore*  MempoolStatus::mcore {nullptr};
+rpccalls::login_opt MempoolStatus::login {};
 vector<MempoolStatus::mempool_tx> MempoolStatus::mempool_txs;
 atomic<MempoolStatus::network_info> MempoolStatus::current_network_info;
 atomic<uint64_t> MempoolStatus::mempool_no {0};   // no of txs

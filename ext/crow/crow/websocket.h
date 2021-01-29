@@ -36,7 +36,7 @@ namespace crow
         class Connection : public connection
         {
 			public:
-				Connection(const crow::request& req, Adaptor&& adaptor,
+				Connection(const crow::request& req, Adaptor&& adaptor, 
 						std::function<void(crow::websocket::connection&)> open_handler,
 						std::function<void(crow::websocket::connection&, const std::string&, bool)> message_handler,
 						std::function<void(crow::websocket::connection&, const std::string&)> close_handler,
@@ -68,7 +68,7 @@ namespace crow
                     sha1::SHA1 s;
                     s.processBytes(magic.data(), magic.size());
                     uint8_t digest[20];
-                    s.getDigestBytes(digest);
+                    s.getDigestBytes(digest);   
                     start(crow::utility::base64encode((char*)digest, 20));
 				}
 
@@ -181,9 +181,9 @@ namespace crow
                     {
                         case WebSocketReadState::MiniHeader:
                             {
-                                //boost::asio::async_read(adaptor_.socket(), boost::asio::buffer(&mini_header_, 1),
-                                adaptor_.socket().async_read_some(boost::asio::buffer(&mini_header_, 2),
-                                    [this](const boost::system::error_code& ec, std::size_t
+                                //boost::asio::async_read(adaptor_.socket(), boost::asio::buffer(&mini_header_, 1), 
+                                adaptor_.socket().async_read_some(boost::asio::buffer(&mini_header_, 2), 
+                                    [this](const boost::system::error_code& ec, std::size_t 
 #ifdef CROW_ENABLE_DEBUG
                                         bytes_transferred
 #endif
@@ -193,7 +193,7 @@ namespace crow
                                         is_reading = false;
                                         mini_header_ = htons(mini_header_);
 #ifdef CROW_ENABLE_DEBUG
-
+                                        
                                         if (!ec && bytes_transferred != 2)
                                         {
                                             throw std::runtime_error("WebSocket:MiniHeader:async_read fail:asio bug?");
@@ -232,12 +232,12 @@ namespace crow
                             {
                                 remaining_length_ = 0;
                 				uint16_t remaining_length16_ = 0;
-                                boost::asio::async_read(adaptor_.socket(), boost::asio::buffer(&remaining_length16_, 2),
-                                    [this,&remaining_length16_](const boost::system::error_code& ec, std::size_t
+                                boost::asio::async_read(adaptor_.socket(), boost::asio::buffer(&remaining_length16_, 2), 
+                                    [this,&remaining_length16_](const boost::system::error_code& ec, std::size_t 
 #ifdef CROW_ENABLE_DEBUG
                                         bytes_transferred
 #endif
-                                        )
+                                        ) 
                                     {
                                         is_reading = false;
                                         remaining_length16_ = ntohs(remaining_length16_);
@@ -267,12 +267,12 @@ namespace crow
                             break;
                         case WebSocketReadState::Len64:
                             {
-                                boost::asio::async_read(adaptor_.socket(), boost::asio::buffer(&remaining_length_, 8),
-                                    [this](const boost::system::error_code& ec, std::size_t
+                                boost::asio::async_read(adaptor_.socket(), boost::asio::buffer(&remaining_length_, 8), 
+                                    [this](const boost::system::error_code& ec, std::size_t 
 #ifdef CROW_ENABLE_DEBUG
                                         bytes_transferred
 #endif
-                                        )
+                                        ) 
                                     {
                                         is_reading = false;
                                         remaining_length_ = ((1==ntohl(1)) ? (remaining_length_) : ((uint64_t)ntohl((remaining_length_) & 0xFFFFFFFF) << 32) | ntohl((remaining_length_) >> 32));
@@ -300,9 +300,9 @@ namespace crow
                             }
                             break;
                         case WebSocketReadState::Mask:
-                                boost::asio::async_read(adaptor_.socket(), boost::asio::buffer((char*)&mask_, 4),
-                                    [this](const boost::system::error_code& ec, std::size_t
-#ifdef CROW_ENABLE_DEBUG
+                                boost::asio::async_read(adaptor_.socket(), boost::asio::buffer((char*)&mask_, 4), 
+                                    [this](const boost::system::error_code& ec, std::size_t 
+#ifdef CROW_ENABLE_DEBUG 
                                         bytes_transferred
 #endif
                                     )
@@ -334,7 +334,7 @@ namespace crow
                                 size_t to_read = buffer_.size();
                                 if (remaining_length_ < to_read)
                                     to_read = remaining_length_;
-                                adaptor_.socket().async_read_some( boost::asio::buffer(buffer_, to_read),
+                                adaptor_.socket().async_read_some( boost::asio::buffer(buffer_, to_read), 
                                     [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
                                     {
                                         is_reading = false;
@@ -462,7 +462,7 @@ namespace crow
                         {
                             buffers.emplace_back(boost::asio::buffer(s));
                         }
-                        boost::asio::async_write(adaptor_.socket(), buffers,
+                        boost::asio::async_write(adaptor_.socket(), buffers, 
                             [&](const boost::system::error_code& ec, std::size_t /*bytes_transferred*/)
                             {
                                 sending_buffers_.clear();

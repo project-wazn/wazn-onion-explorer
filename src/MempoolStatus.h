@@ -7,6 +7,7 @@
 
 
 #include "MicroCore.h"
+#include "rpccalls.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -45,10 +46,6 @@ struct MempoolStatus
         string wazn_outputs_str;
         string timestamp_str;
         string txsize;
-
-        char     pID; // '-' - no payment ID,
-                      // 'l' - legacy, long 64 character payment id,
-                      // 'e' - encrypted, short, from integrated addresses
     };
 
 
@@ -61,6 +58,7 @@ struct MempoolStatus
         uint64_t height  {0};
         uint64_t target_height  {0};
         uint64_t difficulty  {0};
+        uint64_t difficulty_top64  {0};
         uint64_t target  {0};
         uint64_t tx_count  {0};
         uint64_t tx_pool_size  {0};
@@ -72,6 +70,7 @@ struct MempoolStatus
         cryptonote::network_type nettype {cryptonote::network_type::MAINNET};
         crypto::hash top_block_hash;
         uint64_t cumulative_difficulty  {0};
+        uint64_t cumulative_difficulty_top64  {0};
         uint64_t block_size_limit  {0};
         uint64_t block_size_median  {0};
         uint64_t block_weight_limit {0};
@@ -81,6 +80,7 @@ struct MempoolStatus
         uint64_t current_hf_version {0};
 
         uint64_t hash_rate  {0};
+        uint64_t hash_rate_top64  {0};
         uint64_t fee_per_kb  {0};
         uint64_t info_timestamp  {0};
 
@@ -125,8 +125,10 @@ struct MempoolStatus
     static atomic<uint64_t> mempool_size; // size in bytes.
 
     static bf::path blockchain_path;
-    static string daemon_url;
+    static string deamon_url;
     static cryptonote::network_type nettype;
+
+    static rpccalls::login_opt login;
 
     // make object for accessing the blockchain here
     static MicroCore* mcore;
