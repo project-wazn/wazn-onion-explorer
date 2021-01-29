@@ -9,7 +9,7 @@ namespace wazneg
 
 
 rpccalls::rpccalls(
-         string _deamon_url,
+         string _daemon_url,
          login_opt login,
          uint64_t _timeout)
         : daemon_url {_daemon_url},
@@ -22,7 +22,7 @@ rpccalls::rpccalls(
     timeout_time_ms = std::chrono::milliseconds {timeout_time};
 
     m_http_client.set_server(
-             deamon_url,
+             daemon_url,
              login,
              epee::net_utils::ssl_support_t::e_ssl_support_disabled);
 }
