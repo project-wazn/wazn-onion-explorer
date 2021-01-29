@@ -52,7 +52,7 @@ set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${WAZN_BUILD_DIR}"
 
 include(MyUtils)
 
-find_package(Wazn)
+find_package(WAZN)
 
 # find boost
 find_package(Boost COMPONENTS
