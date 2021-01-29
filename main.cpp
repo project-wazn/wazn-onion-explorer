@@ -11,7 +11,7 @@
 #include <regex>
 
 using boost::filesystem::path;
-using waznreg::remove_bad_chars;
+using wazneg::remove_bad_chars;
 
 using namespace std;
 
@@ -43,7 +43,7 @@ main(int ac, const char* av[])
 {
 
     // get command line options
-    waznreg::CmdLineOptions opts {ac, av};
+    wazneg::CmdLineOptions opts {ac, av};
 
     auto help_opt                      = opts.get_option<bool>("help");
 
@@ -123,7 +123,7 @@ main(int ac, const char* av[])
     string ssl_crt_file;
     string ssl_key_file;
 
-    waznreg::rpccalls::login_opt daemon_rpc_login {};
+    wazneg::rpccalls::login_opt daemon_rpc_login {};
 
 
     if (daemon_login_opt)
@@ -186,7 +186,7 @@ main(int ac, const char* av[])
     // get blockchain path
     path blockchain_path;
 
-    if (!waznreg::get_blockchain_path(bc_path_opt, blockchain_path, nettype))
+    if (!wazneg::get_blockchain_path(bc_path_opt, blockchain_path, nettype))
     {
         cerr << "Error getting blockchain path." << endl;
         return EXIT_FAILURE;
@@ -194,11 +194,11 @@ main(int ac, const char* av[])
 
     // create instance of our MicroCore
     // and make pointer to the Blockchain
-    waznreg::MicroCore mcore;
+    wazneg::MicroCore mcore;
     cryptonote::Blockchain* core_storage;
 
     // initialize mcore and core_storage
-    if (!waznreg::init_blockchain(blockchain_path.string(),
+    if (!wazneg::init_blockchain(blockchain_path.string(),
                                mcore, core_storage, nettype))
     {
         cerr << "Error accessing blockchain." << endl;
@@ -243,38 +243,38 @@ main(int ac, const char* av[])
         // the thread is initalized with the values
         // found in emission_amount.txt file.
 
-        waznreg::CurrentBlockchainStatus::blockchain_path
+        wazneg::CurrentBlockchainStatus::blockchain_path
                 = blockchain_path;
-        waznreg::CurrentBlockchainStatus::nettype
+        wazneg::CurrentBlockchainStatus::nettype
                 = nettype;
-        waznreg::CurrentBlockchainStatus::daemon_url
+        wazneg::CurrentBlockchainStatus::daemon_url
                 = daemon_url;
-        waznreg::CurrentBlockchainStatus::set_blockchain_variables(
+        wazneg::CurrentBlockchainStatus::set_blockchain_variables(
                 &mcore, core_storage);
 
         // launch the status monitoring thread so that it keeps track of blockchain
         // info, e.g., current height. Information from this thread is used
         // by tx searching threads that are launched for each user independently,
         // when they log back or create new account.
-        waznreg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
+        wazneg::CurrentBlockchainStatus::start_monitor_blockchain_thread();
     }
 
 
-    waznreg::MempoolStatus::blockchain_path
+    wazneg::MempoolStatus::blockchain_path
             = blockchain_path;
-    waznreg::MempoolStatus::nettype
+    wazneg::MempoolStatus::nettype
             = nettype;
-    waznreg::MempoolStatus::daemon_url
+    wazneg::MempoolStatus::daemon_url
             = daemon_url;
-    waznreg::MempoolStatus::login
+    wazneg::MempoolStatus::login
             = daemon_rpc_login;
-    waznreg::MempoolStatus::set_blockchain_variables(
+    wazneg::MempoolStatus::set_blockchain_variables(
             &mcore, core_storage);
 
-    waznreg::MempoolStatus::network_info initial_info;
+    wazneg::MempoolStatus::network_info initial_info;
     strcpy(initial_info.block_size_limit_str, "0.0");
     strcpy(initial_info.block_size_median_str, "0.0");
-    waznreg::MempoolStatus::current_network_info = initial_info;
+    wazneg::MempoolStatus::current_network_info = initial_info;
 
     try
     {
@@ -292,12 +292,12 @@ main(int ac, const char* av[])
     // info, e.g., current height. Information from this thread is used
     // by tx searching threads that are launched for each user independently,
     // when they log back or create new account.
-    waznreg::MempoolStatus::mempool_refresh_time = mempool_refresh_time;
-    waznreg::MempoolStatus::start_mempool_status_thread();
+    wazneg::MempoolStatus::mempool_refresh_time = mempool_refresh_time;
+    wazneg::MempoolStatus::start_mempool_status_thread();
 
     // create instance of page class which
     // contains logic for the website
-    waznreg::page waznblocks(&mcore,
+    wazneg::page waznblocks(&mcore,
                           core_storage,
                           daemon_url,
                           nettype,
@@ -429,7 +429,7 @@ main(int ac, const char* av[])
      {
 
         map<std::string, std::string> post_body
-                = waznreg::parse_crow_post_data(req.body);
+                = wazneg::parse_crow_post_data(req.body);
 
         if (post_body.count("wazn_address") == 0
             || post_body.count("viewkey") == 0
@@ -476,7 +476,7 @@ main(int ac, const char* av[])
          {
 
             map<std::string, std::string> post_body
-                    = waznreg::parse_crow_post_data(req.body);
+                    = wazneg::parse_crow_post_data(req.body);
 
             if (post_body.count("waznaddress") == 0
                 || post_body.count("txprvkey") == 0
@@ -531,7 +531,7 @@ main(int ac, const char* av[])
          {
 
             map<std::string, std::string> post_body
-                    = waznreg::parse_crow_post_data(req.body);
+                    = wazneg::parse_crow_post_data(req.body);
 
             if (post_body.count("rawtxdata") == 0
                     || post_body.count("action") == 0)
@@ -565,7 +565,7 @@ main(int ac, const char* av[])
          {
 
             map<std::string, std::string> post_body
-                    = waznreg::parse_crow_post_data(req.body);
+                    = wazneg::parse_crow_post_data(req.body);
 
             if (post_body.count("rawkeyimgsdata") == 0)
             {
@@ -598,7 +598,7 @@ main(int ac, const char* av[])
          {
 
             map<std::string, std::string> post_body
-                    = waznreg::parse_crow_post_data(req.body);
+                    = wazneg::parse_crow_post_data(req.body);
 
             if (post_body.count("rawoutputkeysdata") == 0)
             {
@@ -873,8 +873,8 @@ main(int ac, const char* av[])
 
         cout << "Waiting for emission monitoring thread to finish." << endl;
 
-        waznreg::CurrentBlockchainStatus::m_thread.interrupt();
-        waznreg::CurrentBlockchainStatus::m_thread.join();
+        wazneg::CurrentBlockchainStatus::m_thread.interrupt();
+        wazneg::CurrentBlockchainStatus::m_thread.join();
 
         cout << "Emission monitoring thread finished." << endl;
     }
@@ -883,8 +883,8 @@ main(int ac, const char* av[])
 
     cout << "Waiting for mempool monitoring thread to finish." << endl;
 
-    waznreg::MempoolStatus::m_thread.interrupt();
-    waznreg::MempoolStatus::m_thread.join();
+    wazneg::MempoolStatus::m_thread.interrupt();
+    wazneg::MempoolStatus::m_thread.join();
 
     cout << "Mempool monitoring thread finished." << endl;
 
