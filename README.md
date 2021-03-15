@@ -52,7 +52,7 @@ The key features of the WAZN Onion Blockchain Explorer are:
 
 ## Compilation on Ubuntu 16.04/18.04
 
-##### Compile latest WAZN version (v1.1.0) on Ubuntu 18.04
+##### Compile latest WAZN version (v1.3.0) on Ubuntu 18.04
 
 ```bash
 # first install WAZN dependecines
