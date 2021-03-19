@@ -108,13 +108,13 @@ To run it:
 ./waznblocks
 ```
 
-By default it will look for blockchain in its default location i.e., `~/wazn/lmdb`.
+By default it will look for blockchain in its default location i.e., `~/var/lib/wazn/lmdb`.
 You can use `-b` option if its in different location.
 
 For example:
 
 ```bash
-./waznblocks -b /home/mwo/non-default-wazn-location/lmdb/
+./waznblocks -b /var/lib/wazn/lmdb
 ```
 
 Example output:
@@ -135,6 +135,7 @@ waznblocks, WAZN Onion Blockchain Explorer:
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
   -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
   --enable-pusher [=arg(=1)] (=0)       enable signed transaction pusher
+  --enable-randomx [=arg(=1)] (=0)      enable generation of randomx code
   --enable-mixin-details [=arg(=1)] (=0)
                                         enable mixin details for key images,
                                         e.g., timescale, mixin of mixins, in tx
@@ -143,13 +144,9 @@ waznblocks, WAZN Onion Blockchain Explorer:
                                         enable key images file checker
   --enable-output-key-checker [=arg(=1)] (=0)
                                         enable outputs key file checker
-  --enable-json-api [=arg(=1)] (=1)     enable JSON REST api
-  --enable-tx-cache [=arg(=1)] (=0)     enable caching of transaction details
-  --show-cache-times [=arg(=1)] (=0)    show times of getting data from cache
-                                        vs no cache
-  --enable-block-cache [=arg(=1)] (=0)  enable caching of block details
-  --enable-js [=arg(=1)] (=0)           enable checking outputs and proving txs
-                                        using JavaScript on client side
+  --enable-json-api [=arg(=1)] (=0)     enable JSON REST api
+  --enable-as-hex [=arg(=1)] (=0)       enable links to provide hex
+                                        represtations of a tx and a block
   --enable-autorefresh-option [=arg(=1)] (=0)
                                         enable users to have the index page on
                                         autorefresh
@@ -157,6 +154,7 @@ waznblocks, WAZN Onion Blockchain Explorer:
                                         enable WAZN total emission monitoring
                                         thread
   -p [ --port ] arg (=8081)             default explorer port
+  -x [ --bindaddr ] arg (=0.0.0.0)      default bind address for the explorer
   --testnet-url arg                     you can specify testnet url, if you run
                                         it on mainnet or stagenet. link will
                                         show on front page to testnet explorer
@@ -172,13 +170,19 @@ waznblocks, WAZN Onion Blockchain Explorer:
                                         for mempool data for the front page
   --mempool-refresh-time arg (=5)       time, in seconds, for each refresh of
                                         mempool state
+  -c [ --concurrency ] arg (=0)         number of threads handling http
+                                        queries. Default is 0 which means it is
+                                        based you on the cpu
   -b [ --bc-path ] arg                  path to lmdb folder of the blockchain,
-                                        e.g., ~/.wazn/lmdb
+                                        e.g., ~/var/lib/wazn/lmdb
   --ssl-crt-file arg                    path to crt file for ssl (https)
                                         functionality
   --ssl-key-file arg                    path to key file for ssl (https)
                                         functionality
-  -d [ --daemon-url ] arg (=http:://127.0.0.1:11787) WAZN daemon url
+  -d [ --deamon-url ] arg (=http:://127.0.0.1:11787)
+                                        Wazn daemon url
+  --daemon-login arg                    Specify username[:password] for daemon
+                                        RPC client
 ```
 
 Example usage, defined as bash aliases.
@@ -202,13 +206,13 @@ disabled. To enable it use `--enable-emission-monitor` flag, e.g.,
 waznblocks --enable-emission-monitor
 ```
 
-This flag will enable emission monitoring thread. When started, the thread will initially scan the entire blockchain, and calculate the cumulative emission based on each block.Since it is a separate thread, the explorer will work as usual during this time. Every 10000 blocks, the thread will save current emission in a file, by default, in `~/.wazn/lmdb/emission_amount.txt`. For testnet or stagenet networks,it is `~/.wazn/testnet/lmdb emission_amount.txt` or `~/.wazn/stagenet/lmdb/emission_amount.txt`. This file is used so that we don't need to rescan entire blockchain whenever the explorer is restarted. When the explorer restarts, the thread will first check if `~/.wazn/lmdb emission_amount.txt` is present, read its values, and continue from there if possible. Subsequently, only the initial use of the tread is time consuming. Once the thread scans the entire blockchain, it updates the emission amount using new blocks as they come. Since the explorer writes this file, there can be only one instance of it running for mainnet, testnet and stagenet. Thus, for example, you cant have two explorers for mainnet running at the same time, as they will be trying to write and read the same file at the same time, leading to unexpected results. Off course having one instance for mainnet and one instance for testnet is fine, as they write to different files.
+This flag will enable emission monitoring thread. When started, the thread will initially scan the entire blockchain, and calculate the cumulative emission based on each block.Since it is a separate thread, the explorer will work as usual during this time. Every 10000 blocks, the thread will save current emission in a file, by default, in `~/var/lib/wazn/lmdb/emission_amount.txt`. For testnet or stagenet networks,it is `~/var/lib/wazn/testnet/lmdb/emission_amount.txt` or `~/var/lib/wazn/stagenet/lmdb/emission_amount.txt`. This file is used so that we don't need to rescan entire blockchain whenever the explorer is restarted. When the explorer restarts, the thread will first check if `~/var/lib/wazn/lmdb/emission_amount.txt` is present, read its values, and continue from there if possible. Subsequently, only the initial use of the tread is time consuming. Once the thread scans the entire blockchain, it updates the emission amount using new blocks as they come. Since the explorer writes this file, there can be only one instance of it running for mainnet, testnet and stagenet. Thus, for example, you cant have two explorers for mainnet running at the same time, as they will be trying to write and read the same file at the same time, leading to unexpected results. Off course having one instance for mainnet and one instance for testnet is fine, as they write to different files.
 
 When the emission monitor is enabled, information about current emission of coinbase and fees is
 displayed on the front page, e.g., :
 
 ```
-WAZN emission (fees) is 14485540.430 (52545.373) as of 1313448 block
+WAZN emission (fees) is ??? (???) as of 1500 block
 ```
 
 The values given, can be checked using WAZN daemon's  `print_coinbase_tx_sum` command.

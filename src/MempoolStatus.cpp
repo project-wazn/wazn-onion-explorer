@@ -325,7 +325,7 @@ MempoolStatus::is_thread_running()
     return is_running;
 }
 
-bf::path MempoolStatus::blockchain_path {"/home/mwo/.bitwaznd/lmdb"};
+bf::path MempoolStatus::blockchain_path {"/var/lib/wazn/lmdb"};
 string MempoolStatus::daemon_url {"http:://127.0.0.1:11787"};
 cryptonote::network_type MempoolStatus::nettype {cryptonote::network_type::MAINNET};
 atomic<bool>       MempoolStatus::is_running {false};

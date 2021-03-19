@@ -2103,7 +2103,7 @@ show_my_outputs(string tx_hash_str,
             {"blk_height"           , tx_blk_height_str},
             {"tx_size"              , fmt::format("{:0.4f}",
                                                   static_cast<double>(txd.size) / 1024.0)},
-            {"tx_fee"               , wazneg::wazn_amount_to_str(txd.fee, "{:0.12f}", true)},
+            {"tx_fee"               , wazneg::wazn_amount_to_str(txd.fee, "{:0.9f}", true)},
             {"blk_timestamp"        , blk_timestamp},
             {"delta_time"           , age.first},
             {"outputs_no"           , static_cast<uint64_t>(txd.output_pub_keys.size())},
@@ -2663,7 +2663,7 @@ show_my_outputs(string tx_hash_str,
     context["show_inputs"]   = show_key_images;
     context["inputs_no"]     = static_cast<uint64_t>(inputs.size());
     context["sum_mixin_wazn"] = wazneg::wazn_amount_to_str(
-            sum_mixin_wazn, "{:0.12f}", false);
+            sum_mixin_wazn, "{:0.9f}", false);
 
 
     uint64_t possible_spending  {0};
@@ -2696,7 +2696,7 @@ show_my_outputs(string tx_hash_str,
     }
 
     context["possible_spending"] = wazneg::wazn_amount_to_str(
-            possible_spending, "{:0.12f}", false);
+            possible_spending, "{:0.9f}", false);
 
     add_css_style(context);
 
@@ -4120,7 +4120,7 @@ show_address_details(const address_parse_info& address_info, cryptonote::network
     string pub_spendkey_str = fmt::format("{:s}", address_info.address.m_spend_public_key);
 
     mstch::map context {
-            {"wazn_address"        , REMOVE_HASH_BRAKETS(address_str)},
+            {"wazn_address"       , REMOVE_HASH_BRAKETS(address_str)},
             {"public_viewkey"     , REMOVE_HASH_BRAKETS(pub_viewkey_str)},
             {"public_spendkey"    , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
             {"is_integrated_addr" , false},
@@ -6060,9 +6060,9 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
             {"blk_height"            , tx_blk_height_str},
             {"tx_blk_height"         , tx_blk_height},
             {"tx_size"               , fmt::format("{:0.4f}", tx_size)},
-            {"tx_fee"                , wazneg::wazn_amount_to_str(txd.fee, "{:0.12f}", false)},
+            {"tx_fee"                , wazneg::wazn_amount_to_str(txd.fee, "{:0.9f}", false)},
             {"tx_fee_micro"          , wazneg::wazn_amount_to_str(txd.fee*1e6, "{:0.4f}", false)},
-            {"payed_for_kB"          , fmt::format("{:0.12f}", payed_for_kB)},
+            {"payed_for_kB"          , fmt::format("{:0.9f}", payed_for_kB)},
             {"tx_version"            , static_cast<uint64_t>(txd.version)},
             {"blk_timestamp"         , blk_timestamp},
             {"blk_timestamp_uint"    , blk.timestamp},

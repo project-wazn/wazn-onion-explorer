@@ -8,7 +8,7 @@
 #define PATH_SEPARARTOR '/'
 
 #define WAZN_AMOUNT(value) \
-    static_cast<double>(value) / 1e6
+    static_cast<double>(value) / 1e9
 
 #define REMOVE_HASH_BRAKETS(a_hash) \
     a_hash.substr(1, a_hash.size()-2)
@@ -224,7 +224,7 @@ get_payment_id(const transaction& tx,
 inline double
 get_wazn(uint64_t core_amount)
 {
-    return  static_cast<double>(core_amount) / 1e12;
+    return  static_cast<double>(core_amount) / 1e9;
 }
 
 array<size_t, 5>
@@ -237,7 +237,7 @@ read(string filename);
 pair<string, double>
 timestamps_time_scale(const vector<uint64_t>& timestamps,
                       uint64_t timeN, uint64_t resolution = 80,
-                      uint64_t time0 = 1397818193 /* timestamp of the second block */);
+                      uint64_t time0 = 1616099560 /* timestamp of the second block */);
 
 bool
 decode_ringct(const rct::rctSig & rv,
@@ -274,7 +274,7 @@ get_tx_pub_key_from_received_outs(const transaction &tx);
 static
 string
 wazn_amount_to_str(const uint64_t& wazn_amount,
-                  string _format="{:0.12f}",
+                  string _format="{:0.9f}",
                   bool zero_to_question_mark=true)
 {
     string amount_str = "?";
