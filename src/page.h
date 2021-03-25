@@ -362,9 +362,9 @@ struct tx_details
             mixin_str        = std::to_string(mixin_no);
             fee_str          = fmt::format("{:0.6f}", wazn_amount);
             fee_short_str    = fmt::format("{:0.4f}", wazn_amount);
-            fee_micro_str    = fmt::format("{:04.0f}", wazn_amount);
+            fee_micro_str    = fmt::format("{:0.4f}", wazn_amount * 1e6);
             payed_for_kB_str = fmt::format("{:0.4f}", payed_for_kB);
-            payed_for_kB_micro_str = fmt::format("{:04.0f}", payed_for_kB);
+            payed_for_kB_micro_str = fmt::format("{:0.4f}", payed_for_kB * 1e6);
         }
 
 
@@ -377,9 +377,9 @@ struct tx_details
                 {"fee_micro"         , fee_micro_str},
                 {"payed_for_kB"      , payed_for_kB_str},
                 {"payed_for_kB_micro", payed_for_kB_micro_str},
-                {"sum_inputs"        , wazn_amount_to_str(wazn_inputs , "{:0.6f}")},
+                {"sum_inputs"        , wazn_amount_to_str(wazn_inputs, "{:0.6f}")},
                 {"sum_outputs"       , wazn_amount_to_str(wazn_outputs, "{:0.6f}")},
-                {"sum_inputs_short"  , wazn_amount_to_str(wazn_inputs , "{:0.3f}")},
+                {"sum_inputs_short"  , wazn_amount_to_str(wazn_inputs, "{:0.3f}")},
                 {"sum_outputs_short" , wazn_amount_to_str(wazn_outputs, "{:0.3f}")},
                 {"no_inputs"         , static_cast<uint64_t>(input_key_imgs.size())},
                 {"no_outputs"        , static_cast<uint64_t>(output_pub_keys.size())},
@@ -6061,7 +6061,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
             {"tx_blk_height"         , tx_blk_height},
             {"tx_size"               , fmt::format("{:0.4f}", tx_size)},
             {"tx_fee"                , wazneg::wazn_amount_to_str(txd.fee, "{:0.9f}", false)},
-            {"tx_fee_micro"          , wazneg::wazn_amount_to_str(txd.fee, "{:0.4f}", false)},
+            {"tx_fee_micro"          , wazneg::wazn_amount_to_str(txd.fee*1e6, "{:0.4f}", false)},
             {"payed_for_kB"          , fmt::format("{:0.9f}", payed_for_kB)},
             {"tx_version"            , static_cast<uint64_t>(txd.version)},
             {"blk_timestamp"         , blk_timestamp},
