@@ -1,4 +1,4 @@
-WAZN Onion Blockchain Explorer
+Wazn Onion Blockchain Explorer
 ======================
 
 [![License](https://img.shields.io/badge/license-EUPL--1.2-red)](https://opensource.org/licenses/EUPL-1.2)
@@ -10,12 +10,12 @@ Currently available blockchain explorers have several limitations which are of s
  - track users activates through google analytics,
  - are closed sourced,
  - are not available as hidden services,
- - do not support WAZN testnet or stagenet networks,
+ - do not support Wazn testnet or stagenet networks,
  - have limited JSON API.
 
 In this example, these limitations are addressed by development of
-an WAZN Onion Blockchain Explorer. The example not only shows how to use
-WAZN C++ libraries, but also demonstrates how to use:
+an Wazn Onion Blockchain Explorer. The example not only shows how to use
+Wazn C++ libraries, but also demonstrates how to use:
 
  - [crow](https://github.com/ipkn/crow) - C++ micro web framework
  - [mstch](https://github.com/no1msd/mstch) - C++ {{mustache}} templates
@@ -24,12 +24,16 @@ WAZN C++ libraries, but also demonstrates how to use:
 
 ## Onion Explorer hosts
 - [explorer.wazn.io](https://explorer.wazn.io)
+- [xmrchain.net](https://xmrchain.net)
+- [blox.minexmr.com](https://blox.minexmr.com)
+- [explorer.uplexa.com](https://explorer.uplexa.com)
+- [monerochain.com](https://monerochain.com)
 
 <img src="https://wazn.io/downloads/img/explorer2.jpg">
 
-## WAZN Onion Blockchain Explorer features
+## Wazn Onion Blockchain Explorer features
 
-The key features of the WAZN Onion Blockchain Explorer are:
+The key features of the Wazn Onion Blockchain Explorer are:
 
  - no cookies, no web analytics trackers, no images,
  - by default no JavaScript, but can be enabled for client side decoding and proving transactions,
@@ -38,24 +42,24 @@ The key features of the WAZN Onion Blockchain Explorer are:
  - showing encrypted payments ID,
  - showing ring signatures,
  - showing transaction extra field,
- - showing public components of WAZN addresses,
- - decoding which outputs and mixins belong to the given WAZN address and viewkey,
+ - showing public components of Wazn addresses,
+ - decoding which outputs and mixins belong to the given Wazn address and viewkey,
  - can prove that you sent WAZN to someone,
  - detailed information about ring members, such as, their age, timescale and their ring sizes,
  - showing number of amount output indices,
- - support WAZN testnet and stagnet networks,
+ - support Wazn testnet and stagnet networks,
  - tx checker and pusher for online pushing of transactions,
  - estimate possible spendings based on address and viewkey,
  - can provide total amount of all miner fees,
  - decoding encrypted payment id,
  - decoding outputs and proving txs sent to sub-address.
 
-## Compilation on Ubuntu 16.04/18.04
+## Compilation on Ubuntu 18.04/20.04
 
-##### Compile latest WAZN version (v1.3.0) on Ubuntu 18.04
+##### Compile latest Wazn version (v1.2.9) on Ubuntu 20.04
 
 ```bash
-# first install WAZN dependecines
+# first install Wazn dependecines
 sudo apt update
 
 sudo apt update && sudo apt install build-essential cmake pkg-config libboost-all-dev libssl-dev libzmq3-dev libunbound-dev libsodium-dev libunwind8-dev liblzma-dev libreadline6-dev libldns-dev libexpat1-dev doxygen graphviz libpgm-dev qttools5-dev-tools libhidapi-dev libusb-1.0-0-dev libprotobuf-dev protobuf-compiler libudev-dev
@@ -73,7 +77,7 @@ USE_SINGLE_BUILDDIR=1 make
 
 ##### Compile and run the explorer
 
-Once the WAZN compiles, the explorer can be downloaded and compiled
+Once the Wazn compiles, the explorer can be downloaded and compiled
 as follows:
 
 ```bash
@@ -93,7 +97,7 @@ mkdir build && cd build
 cmake ..
 
 # alternatively can use: cmake -DWAZN_DIR=/path/to/wazn_folder ..
-# if WAZN is not in ~/wazn
+# if Wazn is not in ~/wazn
 #
 # also can build with ASAN (sanitizers), for example
 # cmake -DSANITIZE_ADDRESS=On ..
@@ -130,7 +134,7 @@ Go to your browser: http://127.0.0.1:8081
 ## The explorer's command line options
 
 ```
-waznblocks, WAZN Onion Blockchain Explorer:
+waznblocks, Wazn Onion Blockchain Explorer:
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
   -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
@@ -151,7 +155,7 @@ waznblocks, WAZN Onion Blockchain Explorer:
                                         enable users to have the index page on
                                         autorefresh
   --enable-emission-monitor [=arg(=1)] (=0)
-                                        enable WAZN total emission monitoring
+                                        enable Wazn total emission monitoring
                                         thread
   -p [ --port ] arg (=8081)             default explorer port
   -x [ --bindaddr ] arg (=0.0.0.0)      default bind address for the explorer
@@ -197,9 +201,9 @@ alias waznblockstestnet='~/wazn-onion-explorer/build/waznblocks -t --port 8082 -
 
 These are aliases similar to those used for http://139.162.32.245:8081/ and http://139.162.32.245:8082/, respectively.
 
-## Enable WAZN emission
+## Enable Wazn emission
 
-Obtaining current WAZN emission amount is not straight forward. Thus, by default it is
+Obtaining current Wazn emission amount is not straight forward. Thus, by default it is
 disabled. To enable it use `--enable-emission-monitor` flag, e.g.,
 
 ```bash
@@ -212,10 +216,10 @@ When the emission monitor is enabled, information about current emission of coin
 displayed on the front page, e.g., :
 
 ```
-WAZN emission (fees) is ??? (???) as of 1500 block
+Wazn emission (fees) is ??? (???) as of 1500 block
 ```
 
-The values given, can be checked using WAZN daemon's  `print_coinbase_tx_sum` command.
+The values given, can be checked using Wazn daemon's  `print_coinbase_tx_sum` command.
 For example, for the above example: `print_coinbase_tx_sum 0 1313449`.
 
 To disable the monitor, simply restart the explorer without `--enable-emission-monitor` flag.

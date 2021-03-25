@@ -72,7 +72,7 @@ get_tx_pub_key_from_str_hash(Blockchain& core_storage, const string& hash_str, t
 }
 
 /**
-* Parse WAZN address in a string form into
+* Parse Wazn address in a string form into
 * cryptonote::account_public_address object
 */
 bool
@@ -92,7 +92,7 @@ parse_str_address(const string& address_str,
 
 
 /**
-* Return string representation of WAZN address
+* Return string representation of Wazn address
 */
 string
 print_address(const address_parse_info& address_info, cryptonote::network_type nettype)
