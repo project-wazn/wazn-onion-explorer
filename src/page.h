@@ -362,9 +362,9 @@ struct tx_details
             mixin_str        = std::to_string(mixin_no);
             fee_str          = fmt::format("{:0.6f}", wazn_amount);
             fee_short_str    = fmt::format("{:0.4f}", wazn_amount);
-            fee_micro_str    = fmt::format("{:0.4f}", wazn_amount * 1e6);
+            fee_micro_str    = fmt::format("{:0.4f}", wazn_amount);
             payed_for_kB_str = fmt::format("{:0.4f}", payed_for_kB);
-            payed_for_kB_micro_str = fmt::format("{:0.4f}", payed_for_kB * 1e6);
+            payed_for_kB_micro_str = fmt::format("{:0.4f}", payed_for_kB);
         }
 
 
